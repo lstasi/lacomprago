@@ -25,3 +25,46 @@ replay_pid*
 
 # Kotlin Gradle plugin data, see https://kotlinlang.org/docs/whatsnew20.html#new-directory-for-kotlin-data-in-gradle-projects
 .kotlin/
+
+# Android Studio
+.idea/
+.gradle/
+local.properties
+*.iml
+.DS_Store
+
+# Android Build
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services (API keys)
+google-services.json
+
+# Android NDK
+obj/
+
+# IntelliJ
+out/
+
+# Gradle
+.gradle
+/build
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# Android Profiling
+*.hprof
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
