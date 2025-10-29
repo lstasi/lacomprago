@@ -1,53 +1,54 @@
-# LaComprago - Authentication Flow
+# LaCompraGo - Authentication Flow
 
 ## Overview
 
-LaComprago uses OAuth 2.0 for secure authentication with the supermarket API. This document details the complete authentication flow, token management, and security considerations.
+LaCompraGo uses simple token-based authentication. Users input their API token through a text field, and the token is stored securely for subsequent API calls.
 
-## OAuth 2.0 Flow
+## Authentication Approach
 
-### Authorization Code Flow
+### Simple Token Input
 
-LaComprago implements the OAuth 2.0 Authorization Code flow, which is the most secure option for native mobile applications.
+Unlike complex OAuth flows, LaCompraGo uses a straightforward approach:
+- User pastes or types their API token
+- Token is validated on first API call
+- Token is stored encrypted locally
+- No login screens or OAuth redirects
+
+## Authentication Flow
 
 ```
-┌──────────┐                                           ┌──────────────┐
-│          │                                           │              │
-│  User    │                                           │  Auth        │
-│          │                                           │  Server      │
-└────┬─────┘                                           └──────┬───────┘
-     │                                                        │
-     │  1. Click "Login"                                     │
-     ├──────────────────────────────────────────────────────►│
-     │                                                        │
-     │  2. Open Browser with Authorization URL               │
-     │◄───────────────────────────────────────────────────────┤
-     │     + client_id                                        │
-     │     + redirect_uri                                     │
-     │     + response_type=code                               │
-     │     + scope                                            │
-     │     + state                                            │
-     │                                                        │
-     │  3. User authenticates and grants permission          │
-     ├──────────────────────────────────────────────────────►│
-     │                                                        │
-     │  4. Redirect to app with authorization code           │
-     │◄───────────────────────────────────────────────────────┤
-     │     redirect_uri?code=AUTH_CODE&state=STATE           │
-     │                                                        │
-┌────▼─────┐                                           ┌──────▼───────┐
-│          │                                           │              │
-│  App     │  5. Exchange code for tokens             │  API         │
-│          ├──────────────────────────────────────────►│  Server      │
-│          │     POST /oauth/token                     │              │
-│          │     + code                                │              │
-│          │     + client_id                           │              │
-│          │     + client_secret (if required)         │              │
-│          │                                           │              │
-│          │  6. Return access & refresh tokens        │              │
-│          │◄──────────────────────────────────────────┤              │
-│          │                                           │              │
-└──────────┘                                           └──────────────┘
+┌──────────┐
+│          │
+│  User    │
+│          │
+└────┬─────┘
+     │
+     │  1. Open app
+     │
+     ↓
+┌──────────┐
+│  Token   │
+│  Input   │  User pastes/types API token
+│  Screen  │
+└────┬─────┘
+     │
+     │  2. Token entered
+     │
+     ↓
+┌──────────┐
+│   App    │  3. Store token encrypted
+│          │  4. Validate with API call
+└────┬─────┘
+     │
+     │  5. Token valid → proceed
+     │     Token invalid → show error, retry
+     │
+     ↓
+┌──────────┐
+│ Product  │
+│   List   │
+│  Screen  │
+└──────────┘
 ```
 
 ## Authentication States
@@ -56,181 +57,47 @@ LaComprago implements the OAuth 2.0 Authorization Code flow, which is the most s
 
 ```kotlin
 sealed class AuthState {
-    object Unauthenticated : AuthState()
-    object Authenticating : AuthState()
-    data class Authenticated(
-        val user: User,
-        val expiresAt: Long
-    ) : AuthState()
-    data class TokenExpired(val canRefresh: Boolean) : AuthState()
-    data class Error(val error: AuthError) : AuthState()
-}
-
-enum class AuthError {
-    NETWORK_ERROR,
-    INVALID_CREDENTIALS,
-    TOKEN_EXPIRED,
-    REFRESH_FAILED,
-    CANCELLED_BY_USER,
-    UNKNOWN
+    object NoToken : AuthState()
+    object ValidatingToken : AuthState()
+    data class TokenValid(val token: String) : AuthState()
+    data class TokenInvalid(val error: String) : AuthState()
 }
 ```
 
-## Implementation Steps
+## Implementation
 
-### Step 1: Configure OAuth Client
+### Token Input Screen
+
+**UI Components**
+- Text field for token input
+- Submit button
+- Error message display
+- Optional: Info text about where to get token
 
 ```kotlin
-object OAuthConfig {
-    const val CLIENT_ID = "lacomprago_android_client"
-    const val AUTHORIZATION_ENDPOINT = "https://auth.supermarket.com/oauth/authorize"
-    const val TOKEN_ENDPOINT = "https://api.supermarket.com/oauth/token"
-    const val REDIRECT_URI = "lacomprago://oauth/callback"
-    
-    val SCOPES = listOf(
-        "orders:read",
-        "cart:write",
-        "profile:read"
-    )
+// Simple UI layout
+TextField(
+    value = tokenInput,
+    onValueChange = { tokenInput = it },
+    label = "API Token",
+    singleLine = true
+)
+
+Button(onClick = { submitToken() }) {
+    Text("Submit")
+}
+
+if (errorMessage != null) {
+    Text(errorMessage, color = Color.Red)
 }
 ```
 
-### Step 2: Build Authorization URL
-
-```kotlin
-fun buildAuthorizationUrl(state: String): String {
-    val scopes = OAuthConfig.SCOPES.joinToString(" ")
-    
-    return buildString {
-        append(OAuthConfig.AUTHORIZATION_ENDPOINT)
-        append("?client_id=${OAuthConfig.CLIENT_ID}")
-        append("&redirect_uri=${URLEncoder.encode(OAuthConfig.REDIRECT_URI, "UTF-8")}")
-        append("&response_type=code")
-        append("&scope=${URLEncoder.encode(scopes, "UTF-8")}")
-        append("&state=$state")
-    }
-}
-```
-
-### Step 3: Launch Browser for Authentication
-
-```kotlin
-fun initiateOAuthFlow(context: Context) {
-    val state = generateRandomState() // CSRF protection
-    saveState(state) // Store for validation
-    
-    val authUrl = buildAuthorizationUrl(state)
-    
-    // Use Chrome Custom Tabs for better UX
-    val builder = CustomTabsIntent.Builder()
-    val customTabsIntent = builder.build()
-    customTabsIntent.launchUrl(context, Uri.parse(authUrl))
-}
-
-private fun generateRandomState(): String {
-    return UUID.randomUUID().toString()
-}
-```
-
-### Step 4: Handle OAuth Callback
-
-**AndroidManifest.xml**
-```xml
-<activity
-    android:name=".auth.OAuthCallbackActivity"
-    android:launchMode="singleTop"
-    android:exported="true">
-    <intent-filter>
-        <action android:name="android.intent.action.VIEW" />
-        <category android:name="android.intent.category.DEFAULT" />
-        <category android:name="android.intent.category.BROWSABLE" />
-        <data
-            android:scheme="lacomprago"
-            android:host="oauth"
-            android:path="/callback" />
-    </intent-filter>
-</activity>
-```
-
-**OAuthCallbackActivity.kt**
-```kotlin
-class OAuthCallbackActivity : AppCompatActivity() {
-    
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        val uri = intent.data
-        if (uri != null && uri.scheme == "lacomprago") {
-            handleOAuthCallback(uri)
-        } else {
-            handleError(AuthError.INVALID_CALLBACK)
-        }
-        
-        finish()
-    }
-    
-    private fun handleOAuthCallback(uri: Uri) {
-        val code = uri.getQueryParameter("code")
-        val state = uri.getQueryParameter("state")
-        val error = uri.getQueryParameter("error")
-        
-        when {
-            error != null -> handleError(error)
-            code != null && state != null -> {
-                if (validateState(state)) {
-                    exchangeCodeForToken(code)
-                } else {
-                    handleError(AuthError.INVALID_STATE)
-                }
-            }
-            else -> handleError(AuthError.INVALID_CALLBACK)
-        }
-    }
-}
-```
-
-### Step 5: Exchange Authorization Code for Token
-
-```kotlin
-suspend fun exchangeCodeForToken(code: String): Result<AuthToken> {
-    return withContext(Dispatchers.IO) {
-        try {
-            val request = TokenRequest(
-                grant_type = "authorization_code",
-                code = code,
-                client_id = OAuthConfig.CLIENT_ID,
-                redirect_uri = OAuthConfig.REDIRECT_URI
-            )
-            
-            val response = apiService.exchangeToken(request)
-            
-            val token = AuthToken(
-                accessToken = response.access_token,
-                refreshToken = response.refresh_token,
-                tokenType = response.token_type,
-                expiresIn = response.expires_in,
-                expiresAt = System.currentTimeMillis() + (response.expires_in * 1000),
-                scope = response.scope
-            )
-            
-            // Store token securely
-            tokenManager.saveToken(token)
-            
-            Result.success(token)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-}
-```
-
-## Token Management
-
-### Secure Token Storage
+### Token Storage
 
 **EncryptedSharedPreferences**
+
 ```kotlin
-class SecureTokenStorage(context: Context) {
+class TokenStorage(context: Context) {
     
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -238,136 +105,131 @@ class SecureTokenStorage(context: Context) {
     
     private val encryptedPrefs = EncryptedSharedPreferences.create(
         context,
-        "auth_prefs",
+        "token_prefs",
         masterKey,
         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
     
-    fun saveToken(token: AuthToken) {
+    fun saveToken(token: String) {
         encryptedPrefs.edit {
-            putString("access_token", token.accessToken)
-            putString("refresh_token", token.refreshToken)
-            putString("token_type", token.tokenType)
-            putLong("expires_at", token.expiresAt)
-            putString("scope", token.scope)
+            putString("api_token", token)
+            putLong("stored_at", System.currentTimeMillis())
         }
     }
     
-    fun getToken(): AuthToken? {
-        val accessToken = encryptedPrefs.getString("access_token", null)
-            ?: return null
-        
-        return AuthToken(
-            accessToken = accessToken,
-            refreshToken = encryptedPrefs.getString("refresh_token", null),
-            tokenType = encryptedPrefs.getString("token_type", "Bearer")!!,
-            expiresIn = 0L, // Not stored
-            expiresAt = encryptedPrefs.getLong("expires_at", 0L),
-            scope = encryptedPrefs.getString("scope", null)
-        )
+    fun getToken(): String? {
+        return encryptedPrefs.getString("api_token", null)
     }
     
     fun clearToken() {
         encryptedPrefs.edit {
-            clear()
+            remove("api_token")
+            remove("stored_at")
         }
+    }
+    
+    fun hasToken(): Boolean {
+        return getToken() != null
     }
 }
 ```
 
-### Token Refresh
+### Token Validation
+
+**Validate on First API Call**
 
 ```kotlin
-class TokenManager(
-    private val apiService: ApiService,
-    private val tokenStorage: SecureTokenStorage
+class TokenValidator(
+    private val apiClient: ApiClient,
+    private val tokenStorage: TokenStorage
 ) {
-    
-    private val refreshLock = Mutex()
-    
-    suspend fun getValidToken(): String? {
-        val token = tokenStorage.getToken() ?: return null
-        
-        return when {
-            isTokenValid(token) -> token.accessToken
-            canRefreshToken(token) -> refreshToken(token)
-            else -> null
-        }
-    }
-    
-    private fun isTokenValid(token: AuthToken): Boolean {
-        val now = System.currentTimeMillis()
-        val bufferTime = 5 * 60 * 1000 // 5 minutes buffer
-        return token.expiresAt > (now + bufferTime)
-    }
-    
-    private fun canRefreshToken(token: AuthToken): Boolean {
-        return token.refreshToken != null
-    }
-    
-    private suspend fun refreshToken(currentToken: AuthToken): String? {
-        refreshLock.withLock {
-            // Check again in case another coroutine already refreshed
-            val latestToken = tokenStorage.getToken()
-            if (latestToken != null && 
-                latestToken.accessToken != currentToken.accessToken) {
-                return latestToken.accessToken
-            }
+    suspend fun validateToken(token: String): Result<Boolean> {
+        return try {
+            // Make a simple API call to validate token
+            val response = apiClient.validateToken(token)
             
-            try {
-                val request = TokenRequest(
-                    grant_type = "refresh_token",
-                    refresh_token = currentToken.refreshToken,
-                    client_id = OAuthConfig.CLIENT_ID
-                )
-                
-                val response = apiService.refreshToken(request)
-                
-                val newToken = AuthToken(
-                    accessToken = response.access_token,
-                    refreshToken = response.refresh_token 
-                        ?: currentToken.refreshToken,
-                    tokenType = response.token_type,
-                    expiresIn = response.expires_in,
-                    expiresAt = System.currentTimeMillis() + 
-                        (response.expires_in * 1000),
-                    scope = response.scope
-                )
-                
-                tokenStorage.saveToken(newToken)
-                
-                return newToken.accessToken
-            } catch (e: Exception) {
-                // Refresh failed, clear token and require re-login
-                tokenStorage.clearToken()
-                return null
+            if (response.isSuccessful) {
+                // Token is valid, store it
+                tokenStorage.saveToken(token)
+                Result.success(true)
+            } else {
+                // Token is invalid
+                Result.failure(Exception("Invalid token"))
             }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }
 ```
 
-### Automatic Token Refresh
+### ViewModel Implementation
 
-**AuthInterceptor with Auto-Refresh**
 ```kotlin
-class AuthInterceptor(
-    private val tokenManager: TokenManager
+class AuthViewModel(
+    private val tokenStorage: TokenStorage,
+    private val tokenValidator: TokenValidator
+) : ViewModel() {
+    
+    private val _authState = MutableLiveData<AuthState>(AuthState.NoToken)
+    val authState: LiveData<AuthState> = _authState
+    
+    init {
+        checkExistingToken()
+    }
+    
+    private fun checkExistingToken() {
+        val token = tokenStorage.getToken()
+        if (token != null) {
+            _authState.value = AuthState.TokenValid(token)
+        } else {
+            _authState.value = AuthState.NoToken
+        }
+    }
+    
+    fun submitToken(token: String) {
+        if (token.isBlank()) {
+            _authState.value = AuthState.TokenInvalid("Token cannot be empty")
+            return
+        }
+        
+        _authState.value = AuthState.ValidatingToken
+        
+        viewModelScope.launch {
+            val result = tokenValidator.validateToken(token)
+            
+            _authState.value = if (result.isSuccess) {
+                AuthState.TokenValid(token)
+            } else {
+                AuthState.TokenInvalid(
+                    result.exceptionOrNull()?.message ?: "Invalid token"
+                )
+            }
+        }
+    }
+    
+    fun clearToken() {
+        tokenStorage.clearToken()
+        _authState.value = AuthState.NoToken
+    }
+}
+```
+
+## API Integration
+
+### Adding Token to Requests
+
+**Simple Interceptor**
+
+```kotlin
+class TokenInterceptor(
+    private val tokenStorage: TokenStorage
 ) : Interceptor {
     
     override fun intercept(chain: Chain): Response {
         val original = chain.request()
-        
-        // Skip authentication for token endpoint
-        if (original.url.encodedPath.contains("/oauth/token")) {
-            return chain.proceed(original)
-        }
-        
-        // Get valid token (refreshes if needed)
-        val token = runBlocking {
-            tokenManager.getValidToken()
-        }
+        val token = tokenStorage.getToken()
         
         val request = if (token != null) {
             original.newBuilder()
@@ -379,26 +241,10 @@ class AuthInterceptor(
         
         val response = chain.proceed(request)
         
-        // Handle 401 (token might have expired during request)
+        // Handle 401 Unauthorized
         if (response.code == 401) {
-            response.close()
-            
-            // Try to refresh token
-            val newToken = runBlocking {
-                tokenManager.refreshToken()
-            }
-            
-            if (newToken != null) {
-                // Retry request with new token
-                return chain.proceed(
-                    original.newBuilder()
-                        .header("Authorization", "Bearer $newToken")
-                        .build()
-                )
-            } else {
-                // Refresh failed, user needs to re-login
-                // Emit event to trigger logout flow
-            }
+            // Token is invalid, clear it
+            tokenStorage.clearToken()
         }
         
         return response
@@ -406,154 +252,164 @@ class AuthInterceptor(
 }
 ```
 
-## Logout Flow
+### OkHttp Client Setup
 
 ```kotlin
-suspend fun logout() {
-    withContext(Dispatchers.IO) {
-        try {
-            // Optional: Revoke token on server
-            val token = tokenStorage.getToken()
-            if (token != null) {
-                revokeToken(token.accessToken)
-            }
-        } catch (e: Exception) {
-            // Log error but continue with local cleanup
-        } finally {
-            // Clear local token
-            tokenStorage.clearToken()
-            
-            // Clear any cached data
-            clearUserData()
-            
-            // Navigate to login screen
-            navigateToLogin()
-        }
-    }
-}
-
-private suspend fun revokeToken(token: String) {
-    // Call revocation endpoint if available
-    apiService.revokeToken(token)
+fun createApiClient(tokenStorage: TokenStorage): OkHttpClient {
+    return OkHttpClient.Builder()
+        .addInterceptor(TokenInterceptor(tokenStorage))
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .build()
 }
 ```
 
 ## Security Considerations
 
-### 1. CSRF Protection
-
-**State Parameter**
-- Generate random state for each auth request
-- Validate state on callback
-- Use cryptographically secure random generation
-
-```kotlin
-fun generateState(): String {
-    val random = SecureRandom()
-    val bytes = ByteArray(32)
-    random.nextBytes(bytes)
-    return Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_WRAP)
-}
-```
-
-### 2. PKCE (Proof Key for Code Exchange)
-
-For enhanced security (optional but recommended):
-
-```kotlin
-// Generate code verifier
-fun generateCodeVerifier(): String {
-    val random = SecureRandom()
-    val bytes = ByteArray(32)
-    random.nextBytes(bytes)
-    return Base64.encodeToString(bytes, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
-}
-
-// Generate code challenge
-fun generateCodeChallenge(verifier: String): String {
-    val bytes = verifier.toByteArray(Charsets.US_ASCII)
-    val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
-    return Base64.encodeToString(digest, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
-}
-
-// Add to authorization URL
-fun buildAuthorizationUrl(state: String, codeChallenge: String): String {
-    // ... existing parameters
-    append("&code_challenge=$codeChallenge")
-    append("&code_challenge_method=S256")
-}
-
-// Include verifier in token exchange
-fun exchangeCodeForToken(code: String, codeVerifier: String): Result<AuthToken> {
-    val request = TokenRequest(
-        grant_type = "authorization_code",
-        code = code,
-        client_id = OAuthConfig.CLIENT_ID,
-        redirect_uri = OAuthConfig.REDIRECT_URI,
-        code_verifier = codeVerifier
-    )
-    // ... rest of implementation
-}
-```
-
-### 3. Token Security
+### Token Security
 
 **Best Practices**
-- Never log tokens
-- Store tokens encrypted
-- Clear tokens on logout
-- Use HTTPS only
-- Implement token expiration
-- Rotate refresh tokens
+- Store token encrypted using EncryptedSharedPreferences
+- Never log the token value
+- Clear token on logout
+- Use HTTPS for all API calls
+- Handle 401 errors by prompting for new token
 
-### 4. Secure Communication
+### Secure Storage
 
-**SSL/TLS**
-- Use HTTPS for all requests
-- Certificate pinning (optional)
-- Validate SSL certificates
+**EncryptedSharedPreferences Benefits**
+- AES256-GCM encryption
+- Keys stored in Android Keystore
+- Automatic key generation
+- Built into AndroidX Security library
+
+### Token Validation
+
+**Validation Strategy**
+- Validate token on first API call
+- Don't store invalid tokens
+- Clear token if API returns 401
+- Re-prompt user for valid token
 
 ## Error Handling
 
-### Authentication Errors
+### Common Errors
 
 ```kotlin
-sealed class AuthError {
-    object NetworkError : AuthError()
-    object InvalidCredentials : AuthError()
-    object TokenExpired : AuthError()
-    object RefreshFailed : AuthError()
-    object UserCancelled : AuthError()
-    data class ServerError(val code: Int, val message: String) : AuthError()
-    object Unknown : AuthError()
+sealed class TokenError {
+    object EmptyToken : TokenError()
+    object InvalidFormat : TokenError()
+    object NetworkError : TokenError()
+    object Unauthorized : TokenError()
+    data class Unknown(val message: String) : TokenError()
 }
 
-fun handleAuthError(error: AuthError) {
-    when (error) {
-        is AuthError.NetworkError -> {
-            showMessage("No internet connection")
-        }
-        is AuthError.InvalidCredentials -> {
-            showMessage("Invalid credentials. Please try again.")
-        }
-        is AuthError.TokenExpired -> {
-            // Attempt automatic refresh
-            attemptTokenRefresh()
-        }
-        is AuthError.RefreshFailed -> {
-            showMessage("Session expired. Please login again.")
-            navigateToLogin()
-        }
-        is AuthError.UserCancelled -> {
-            // User cancelled authentication
-        }
-        is AuthError.ServerError -> {
-            showMessage("Server error: ${error.message}")
-        }
-        is AuthError.Unknown -> {
-            showMessage("An unexpected error occurred")
-        }
+fun handleTokenError(error: TokenError): String {
+    return when (error) {
+        is TokenError.EmptyToken -> "Please enter a token"
+        is TokenError.InvalidFormat -> "Token format is invalid"
+        is TokenError.NetworkError -> "Network error. Please try again"
+        is TokenError.Unauthorized -> "Token is invalid or expired"
+        is TokenError.Unknown -> "Error: ${error.message}"
     }
+}
+```
+
+### Error Recovery
+
+**User Actions**
+- Show clear error message
+- Allow user to re-enter token
+- Provide help text or link to get token
+- Option to clear stored token and start over
+
+## User Experience
+
+### App Launch Flow
+
+```kotlin
+fun determineInitialScreen(): Screen {
+    return if (tokenStorage.hasToken()) {
+        Screen.ProductList
+    } else {
+        Screen.TokenInput
+    }
+}
+```
+
+### Token Input Screen Design
+
+**Minimal UI**
+```
+┌─────────────────────────────────┐
+│  LaCompraGo                     │
+├─────────────────────────────────┤
+│                                 │
+│  Enter your API token:          │
+│                                 │
+│  ┌───────────────────────────┐  │
+│  │ [token text field]        │  │
+│  └───────────────────────────┘  │
+│                                 │
+│  [Submit Button]                │
+│                                 │
+│  Where to get your token?       │
+│  [Help Link]                    │
+│                                 │
+└─────────────────────────────────┘
+```
+
+### Loading State
+
+While validating token:
+- Show progress indicator
+- Disable input
+- Display "Validating token..." message
+
+### Success State
+
+When token is valid:
+- Show brief success message
+- Navigate to product list screen
+- Store token for future sessions
+
+### Error State
+
+When token is invalid:
+- Show error message
+- Keep token input visible
+- Allow user to try again
+- Provide clear guidance
+
+## Token Management
+
+### Logout
+
+```kotlin
+fun logout() {
+    // Clear stored token
+    tokenStorage.clearToken()
+    
+    // Navigate to token input screen
+    navigateToTokenInput()
+}
+```
+
+### Token Expiration
+
+**Handling 401 Errors**
+
+```kotlin
+fun handleUnauthorized() {
+    // Clear invalid token
+    tokenStorage.clearToken()
+    
+    // Show message
+    showMessage("Token expired or invalid. Please enter a new token.")
+    
+    // Navigate to token input
+    navigateToTokenInput()
 }
 ```
 
@@ -563,34 +419,37 @@ fun handleAuthError(error: AuthError) {
 
 ```kotlin
 @Test
-fun `test token expiration check`() {
-    val expiredToken = AuthToken(
-        accessToken = "token",
-        refreshToken = "refresh",
-        tokenType = "Bearer",
-        expiresIn = 3600,
-        expiresAt = System.currentTimeMillis() - 1000,
-        scope = null
-    )
+fun `test token storage and retrieval`() {
+    val token = "test_token_123"
     
-    assertFalse(tokenManager.isTokenValid(expiredToken))
+    tokenStorage.saveToken(token)
+    
+    val retrieved = tokenStorage.getToken()
+    assertEquals(token, retrieved)
 }
 
 @Test
-fun `test successful token refresh`() = runTest {
-    val oldToken = createTestToken()
+fun `test token validation success`() = runTest {
+    val validToken = "valid_token"
     
-    coEvery { apiService.refreshToken(any()) } returns TokenResponse(
-        access_token = "new_token",
-        refresh_token = "new_refresh",
-        token_type = "Bearer",
-        expires_in = 3600
-    )
+    coEvery { apiClient.validateToken(validToken) } returns 
+        Response.success(Unit)
     
-    val newToken = tokenManager.refreshToken(oldToken)
+    val result = tokenValidator.validateToken(validToken)
     
-    assertNotNull(newToken)
-    assertEquals("new_token", newToken)
+    assertTrue(result.isSuccess)
+}
+
+@Test
+fun `test token validation failure`() = runTest {
+    val invalidToken = "invalid_token"
+    
+    coEvery { apiClient.validateToken(invalidToken) } returns 
+        Response.error(401, mockErrorBody)
+    
+    val result = tokenValidator.validateToken(invalidToken)
+    
+    assertTrue(result.isFailure)
 }
 ```
 
@@ -598,53 +457,61 @@ fun `test successful token refresh`() = runTest {
 
 ```kotlin
 @Test
-fun `test complete OAuth flow`() {
-    // 1. Build authorization URL
-    val authUrl = buildAuthorizationUrl("state123")
-    assertTrue(authUrl.contains("client_id"))
+fun `test complete token flow`() {
+    // 1. Start with no token
+    assertFalse(tokenStorage.hasToken())
     
-    // 2. Simulate callback
-    val callbackUri = Uri.parse("lacomprago://oauth/callback?code=CODE&state=state123")
+    // 2. User enters token
+    viewModel.submitToken("test_token")
     
-    // 3. Exchange code for token
-    val token = exchangeCodeForToken("CODE")
+    // 3. Verify token is validated
+    assertEquals(AuthState.ValidatingToken, viewModel.authState.value)
     
-    // 4. Verify token is stored
-    val storedToken = tokenStorage.getToken()
-    assertNotNull(storedToken)
+    // 4. Wait for validation
+    advanceUntilIdle()
+    
+    // 5. Verify token is stored
+    assertTrue(tokenStorage.hasToken())
 }
 ```
 
-## User Experience
+## Configuration
 
-### Loading States
+### API Endpoints
 
-**During Authentication**
-- Show loading indicator
-- Disable interaction
-- Provide cancel option
+```kotlin
+object ApiConfig {
+    const val BASE_URL = "https://api.supermarket.example.com/"
+    const val TOKEN_VALIDATION_ENDPOINT = "api/validate"
+}
+```
 
-**On Success**
-- Navigate to main screen
-- Show welcome message
+### Token Format
 
-**On Error**
-- Clear loading state
-- Show error message
-- Provide retry option
+**Expected Format**
+- Bearer token
+- Alphanumeric string
+- Variable length (typically 32-64 characters)
+- No specific format validation (validated by API)
 
-### Session Management
+## Comparison with OAuth
 
-**App Launch**
-- Check for valid token
-- Auto-login if valid
-- Show login screen if invalid
+### Why Simple Token Input?
 
-**Background/Foreground**
-- Maintain session
-- Refresh token if needed
-- Handle token expiration gracefully
+**Advantages**
+- Much simpler implementation
+- No browser redirects
+- No complex OAuth flow
+- Minimal dependencies
+- Easier to test
+- Better for simple apps
+
+**Trade-offs**
+- User must obtain token externally
+- No automated token refresh
+- User responsible for token security
+- Simpler but less automated
 
 ## Conclusion
 
-This authentication flow provides secure, user-friendly OAuth 2.0 implementation with proper token management, automatic refresh, and comprehensive error handling for the LaComprago application.
+This simple token-based authentication approach provides secure, straightforward access to the API while minimizing complexity and dependencies. It's ideal for LaCompraGo's use case where simplicity is prioritized.

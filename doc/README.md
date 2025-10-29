@@ -1,341 +1,337 @@
-# LaComprago - Documentation Index
+# LaCompraGo - Documentation Index
 
 ## Overview
 
-This directory contains the complete architecture and design documentation for the LaComprago Android application. All documentation has been created as part of the initial design phase before implementation.
+This directory contains the complete architecture and design documentation for the LaCompraGo Android application. The documentation has been simplified to focus on minimal dependencies and straightforward implementation.
 
 ## Documentation Structure
 
 ### 1. [Architecture Overview](./architecture.md)
-**Purpose**: Defines the overall system architecture and design patterns
+**Purpose**: Defines the simplified system architecture
 
 **Contents**:
-- MVVM architecture pattern
-- Layer descriptions (Presentation, Domain, Data)
+- Simplified MVVM pattern
+- Minimal layer structure
 - Component responsibilities
-- Technology stack
-- Navigation structure
-- State management approach
-- Threading model
-- Security considerations
-- Performance optimization strategies
-- Testing strategy
+- Minimal technology stack
+- JSON file storage
+- Simple navigation
+- Threading with Coroutines
 
 **Key Decisions**:
-- MVVM with Repository pattern
-- Kotlin Coroutines for async operations
-- Room for local database
-- Retrofit for API communication
-- Hilt for dependency injection
+- MVVM without complex domain layer
+- JSON files instead of Room database
+- OkHttp only (no Retrofit)
+- Manual dependency management (no Hilt)
+- Token-based authentication (no OAuth)
+- Sequential order processing
 
 ---
 
 ### 2. [Data Models](./data-models.md)
-**Purpose**: Comprehensive definition of all data structures used in the application
+**Purpose**: Simplified data structures using JSON
 
 **Contents**:
-- Domain models (business logic layer)
-- Database entities (Room)
-- API request/response models
+- Product model (frequency and last purchase)
+- ProductList for JSON storage
+- ProcessedOrders tracking
+- API response models
 - UI state models
-- Data mappers between layers
-- Validation rules
-- Database relationships and indexes
-- Data retention policies
+- JSON serialization with Gson
 
 **Key Models**:
-- Authentication: `AuthToken`, `User`
-- Orders: `Order`, `OrderItem`, `OrderStatus`
-- Products: `Product`, `ProductStatistics`, `ProductFrequencyAnalysis`
-- Shopping Cart: `ShoppingCart`, `CartItem`, `CartStatus`
+- `Product`: id, name, frequency, lastPurchase
+- `ProductList`: List of products in JSON file
+- `ProcessedOrders`: Tracks which orders have been processed
+- `OrderResponse`: API order data
+- `CartRequest`: Shopping cart submission
 
 ---
 
 ### 3. [API Integration](./api-integration.md)
-**Purpose**: Details the integration with the supermarket API
+**Purpose**: Simple API integration with OkHttp
 
 **Contents**:
-- API architecture and configuration
-- Complete endpoint documentation
-- Request/response formats
-- Authentication headers
-- Interceptors (Auth, Logging, Network)
-- Error handling strategy
-- Retry policies
-- Rate limiting
-- Caching strategy
-- Security best practices
-- Testing approach
-- API versioning
+- OkHttp-only setup (no Retrofit)
+- Token interceptor
+- API endpoints
+- Sequential order processing
+- Error handling
+- Retry logic
+- Progress tracking
 
 **Key Endpoints**:
-- OAuth: `/oauth/authorize`, `/oauth/token`
-- User: `/api/user/profile`
-- Orders: `/api/orders`, `/api/orders/{id}`
-- Cart: `/api/cart`, `/api/cart/{id}`
+- Token validation: `/api/validate`
+- Order list: `/api/orders`
+- Order details: `/api/orders/{id}`
+- Create cart: `/api/cart`
 
 ---
 
 ### 4. [Authentication Flow](./authentication.md)
-**Purpose**: Complete OAuth 2.0 authentication implementation guide
+**Purpose**: Simple token-based authentication
 
 **Contents**:
-- OAuth 2.0 authorization code flow
-- Authentication state machine
-- Step-by-step implementation
-- Token management and storage
-- Automatic token refresh
-- Secure token storage with encryption
-- PKCE implementation (optional)
-- Logout flow
-- Security considerations
+- Token input screen
+- EncryptedSharedPreferences storage
+- Token validation
+- No OAuth flow
+- Simple state machine
 - Error handling
-- Testing strategies
-- User experience guidelines
 
 **Key Components**:
-- `OAuthConfig`: Configuration
-- `SecureTokenStorage`: Encrypted token storage
-- `TokenManager`: Token lifecycle management
-- `AuthInterceptor`: Automatic token handling
+- `TokenStorage`: Encrypted token persistence
+- `TokenValidator`: Validate token with API
+- `AuthViewModel`: Manage auth state
+- `TokenInterceptor`: Add token to requests
 
 ---
 
 ### 5. [Feature Specifications](./features.md)
-**Purpose**: Detailed specifications for each application feature
+**Purpose**: Detailed specifications for all features
 
 **Contents**:
 
-#### Feature 1: OAuth Authentication
-- User stories and requirements
-- User flow
-- UI screens
-- Acceptance criteria
+#### Feature 1: Token Authentication
+- Text field for token input
+- Encrypted storage
+- Validation on first API call
 
-#### Feature 2: Order History
-- List and detail views
-- Pagination and caching
-- Filtering and sorting
-- Acceptance criteria
+#### Feature 2: Product List
+- Display products with frequency and last purchase
+- Load from JSON file
+- Sort by frequency
 
-#### Feature 3: Product Statistics
-- Statistical calculations
-- Frequency analysis
-- Recommendation levels
-- UI visualization
-- Sorting and filtering
-- Acceptance criteria
+#### Feature 3: Order Processing
+- Sequential download (one by one)
+- Progress display (X of Y orders)
+- Cancellable with partial progress save
+- Update products after each order
+- Track processed orders
 
-#### Feature 4: Shopping Cart Builder
-- Auto-generation algorithm
-- Manual editing capabilities
-- Quantity calculations
-- Cart submission
-- Acceptance criteria
-
-#### Feature 5: Data Synchronization
-- Sync strategies
-- Incremental updates
-- Conflict resolution
-- Acceptance criteria
-
-**Also Includes**:
-- Common UI elements
-- Navigation structure
-- Loading and empty states
-- Error states
-- Non-functional requirements
-- Success metrics
-- Future enhancements
+#### Feature 4: Shopping Cart
+- Auto-generate from frequent products
+- Submit to API
+- Success/error handling
 
 ---
 
 ## Design Principles
 
 ### 1. Simplicity First
-- No unnecessary animations
-- No complex graphics
-- Clean, functional UI
-- Focus on core features
+- Minimal dependencies
+- No unnecessary features
+- Direct implementations
+- Easy to understand
 
-### 2. Security by Design
+### 2. Sequential Processing
+- Download orders one at a time
+- Update after each order
+- Save progress continuously
+- Allow cancellation
+
+### 3. File-Based Storage
+- JSON files for persistence
+- No database complexity
+- Easy to debug
+- Efficient for this use case
+
+### 4. Security
 - Encrypted token storage
-- HTTPS only communication
+- HTTPS communication
 - No sensitive data in logs
-- Secure authentication flow
-
-### 3. Performance Optimized
-- Efficient database queries
-- Smart caching strategies
-- Background data sync
-- Optimistic UI updates
-
-### 4. Testability
-- Clear separation of concerns
-- Dependency injection
-- Mockable components
-- Comprehensive test strategy
-
-### 5. Maintainability
-- Well-documented code structure
-- Consistent naming conventions
-- Clear architecture layers
-- Modular design
+- Secure file storage
 
 ## Technology Stack Summary
 
-### Core Technologies
-- **Language**: Kotlin
-- **Minimum SDK**: Android 14 (API 34)
-- **Architecture**: MVVM
-- **Async**: Kotlin Coroutines + Flow
+### Minimal Dependencies
+```gradle
+// Android Core (required)
+androidx.core:core-ktx
+androidx.appcompat:appcompat
+com.google.android.material:material
 
-### Android Jetpack
-- **ViewModel**: State management
-- **LiveData/StateFlow**: Reactive data
-- **Room**: Local database
-- **Navigation**: App navigation
-- **Lifecycle**: Lifecycle-aware components
-- **DataStore**: Secure preferences
+// Lifecycle (ViewModel, LiveData)
+androidx.lifecycle:lifecycle-viewmodel-ktx
+androidx.lifecycle:lifecycle-livedata-ktx
 
-### Networking
-- **Retrofit**: REST API client
-- **OkHttp**: HTTP client
-- **Gson/Moshi**: JSON serialization
+// Networking (HTTP only)
+com.squareup.okhttp3:okhttp
 
-### Security
-- **EncryptedSharedPreferences**: Token storage
-- **Android Keystore**: Cryptographic operations
+// JSON
+com.google.code.gson:gson
 
-### Dependency Injection
-- **Hilt**: DI framework
+// Security
+androidx.security:security-crypto
+```
 
-### Testing
-- **JUnit**: Unit testing
-- **MockK**: Mocking
-- **Espresso**: UI testing
-- **Truth**: Assertions
+### What's NOT Included
+- ❌ Hilt/Dagger (manual DI)
+- ❌ Room (JSON files)
+- ❌ Retrofit (OkHttp only)
+- ❌ Navigation Component (simple transitions)
+- ❌ DataStore (EncryptedSharedPreferences)
+- ❌ Compose (traditional Views)
 
 ## Development Workflow
 
-### Phase 1: Setup (Current)
+### Phase 1: Setup ✅ COMPLETE
 - ✅ Architecture design
 - ✅ Documentation creation
-- ✅ Technology selection
-- ✅ Project structure planning
+- ✅ Simplified approach
+- ✅ Task breakdown
 
 ### Phase 2: Foundation
 - Create Android project
-- Set up dependencies
-- Configure build system
-- Implement base architecture
+- Add minimal dependencies
+- Set up token authentication
+- Implement JSON storage
 
 ### Phase 3: Features
-- Implement authentication
-- Build order history
-- Create statistics engine
-- Develop cart builder
+- Build product list screen
+- Implement order processing
+- Create cart generation
+- Connect to API
 
 ### Phase 4: Polish
-- UI refinements
-- Performance optimization
-- Comprehensive testing
-- Documentation updates
-
-### Phase 5: Release
-- Final testing
-- Security audit
-- Performance review
-- Deployment preparation
+- Error handling
+- Progress indicators
+- Testing
+- Bug fixes
 
 ## Quick Reference
 
-### Key Files Location (Future)
+### File Structure (Future)
 ```
 app/
 ├── src/main/
 │   ├── java/com/lacomprago/
 │   │   ├── data/
-│   │   │   ├── repository/
-│   │   │   ├── local/
-│   │   │   └── remote/
-│   │   ├── domain/
-│   │   │   ├── model/
-│   │   │   └── usecase/
-│   │   └── presentation/
-│   │       ├── auth/
-│   │       ├── orders/
-│   │       ├── statistics/
-│   │       └── cart/
+│   │   │   ├── storage/         # JSON file operations
+│   │   │   ├── api/             # OkHttp API client
+│   │   │   └── model/           # Data models
+│   │   ├── ui/
+│   │   │   ├── token/           # Token input screen
+│   │   │   ├── products/        # Product list screen
+│   │   │   ├── processing/      # Order processing dialog
+│   │   │   └── cart/            # Cart screen
+│   │   └── viewmodel/           # ViewModels
 │   └── res/
-│       ├── layout/
-│       ├── values/
-│       └── drawable/
+│       ├── layout/              # XML layouts
+│       └── values/              # Strings, colors
 └── build.gradle
 ```
 
-### Important Configuration Files
-- `build.gradle`: Dependencies and build config
-- `AndroidManifest.xml`: App configuration
-- `proguard-rules.pro`: Code obfuscation rules
+### Data Files
+- `products.json`: Product list with frequencies
+- `processed_orders.json`: Tracked order IDs
+- Token stored in EncryptedSharedPreferences
+
+## Key Differences from Original Design
+
+### Simplified
+| Original | Simplified |
+|----------|------------|
+| OAuth 2.0 | Token input |
+| Room database | JSON files |
+| Retrofit | OkHttp only |
+| Hilt DI | Manual DI |
+| Complex flows | Simple flows |
+| Parallel processing | Sequential processing |
+
+### Why Simplified?
+- Faster development
+- Easier to understand
+- Fewer dependencies
+- Less maintenance
+- Sufficient for requirements
 
 ## Getting Started with Implementation
 
-1. **Read the Architecture Overview** to understand the overall design
-2. **Review Data Models** to understand data structures
-3. **Study API Integration** for backend communication
-4. **Understand Authentication Flow** before implementing auth
-5. **Reference Feature Specifications** during implementation
+1. **Read Architecture Overview** - Understand the simple structure
+2. **Review Data Models** - See JSON-based storage
+3. **Study API Integration** - Learn OkHttp usage
+4. **Check Feature Specs** - Understand each feature
+5. **Follow Todo** - Implementation order
 
-## Contributing Guidelines
+## Testing Strategy
 
-When implementing features:
+### Focus Areas
+- Token storage encryption
+- JSON file operations
+- API calls
+- Order processing logic
+- Product frequency calculations
 
-1. Follow the architecture patterns defined
-2. Use the data models as specified
-3. Implement error handling as documented
-4. Write tests according to the testing strategy
-5. Update documentation if design changes
+### Test Types
+- Unit tests for logic
+- Integration tests for API
+- Manual testing on device
 
-## Questions and Clarifications
+## Common Patterns
 
-If any aspect of the design is unclear:
+### JSON Storage Pattern
+```kotlin
+// Save
+val json = gson.toJson(productList)
+context.openFileOutput("products.json", MODE_PRIVATE).use {
+    it.write(json.toByteArray())
+}
 
-1. Review the relevant documentation section
-2. Check for examples in the documentation
-3. Refer to the acceptance criteria in feature specs
-4. Consult the architecture diagrams
+// Load
+context.openFileInput("products.json").use { input ->
+    val json = input.bufferedReader().use { it.readText() }
+    gson.fromJson(json, ProductList::class.java)
+}
+```
 
-## Next Steps
+### API Call Pattern
+```kotlin
+// Build request
+val request = Request.Builder()
+    .url("$BASE_URL/api/orders")
+    .get()
+    .build()
 
-1. Create Android project structure
-2. Set up Gradle dependencies
-3. Implement base architecture classes
-4. Begin with authentication feature
-5. Progressively build remaining features
+// Execute
+val response = httpClient.newCall(request).execute()
+
+// Parse
+val json = response.body?.string()
+val data = gson.fromJson(json, OrderListResponse::class.java)
+```
+
+### Sequential Processing Pattern
+```kotlin
+for ((index, order) in orders.withIndex()) {
+    // Check cancellation
+    if (!shouldContinue()) break
+    
+    // Update progress
+    onProgress(index + 1, orders.size, order.id)
+    
+    // Process
+    processOrder(order)
+    
+    // Save progress
+    saveProgress()
+}
+```
 
 ## Version History
 
-- **v0.1.0** - Initial design and architecture (Current)
-  - Complete architecture documentation
-  - Data models defined
-  - API integration designed
-  - Authentication flow documented
-  - Feature specifications completed
+- **v0.2.0** - Simplified design (Current)
+  - Token-based authentication
+  - JSON file storage
+  - Minimal dependencies
+  - Sequential processing
+
+- **v0.1.0** - Initial design
+  - OAuth authentication
+  - Room database
+  - Full dependency stack
 
 ---
 
-## Document Maintenance
-
-These documents should be kept up-to-date as the project evolves:
-
-- Update when architectural decisions change
-- Add new sections for new features
-- Keep code examples synchronized
-- Document design rationale
-- Track version changes in changelog
-
----
-
-*Last Updated: October 28, 2025*
-*Status: Design Phase Complete - Ready for Implementation*
+*Last Updated: October 29, 2025*
+*Status: Simplified Design Phase Complete - Ready for Implementation*

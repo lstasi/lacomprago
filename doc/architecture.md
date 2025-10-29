@@ -1,51 +1,42 @@
-# LaComprago - Architecture Overview
+# LaCompraGo - Architecture Overview
 
-## Architecture Pattern: MVVM (Model-View-ViewModel)
+## Architecture Pattern: Simplified MVVM
 
 ### Overview
 
-LaComprago follows the MVVM (Model-View-ViewModel) architecture pattern, which is the recommended approach for Android applications. This pattern provides clear separation of concerns, testability, and maintainability.
+LaCompraGo follows a simplified MVVM (Model-View-ViewModel) architecture pattern with minimal dependencies. The focus is on simplicity, keeping only essential components for functionality.
 
 ## Architecture Layers
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                     Presentation Layer                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   Activity   │  │   Fragment   │  │  Composables │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-│          │                  │                  │         │
-│          └──────────────────┴──────────────────┘         │
+│  ┌──────────────┐  ┌──────────────┐                     │
+│  │   Activity   │  │   Fragment   │                     │
+│  └──────────────┘  └──────────────┘                     │
+│          │                  │                            │
+│          └──────────────────┘                            │
 │                           ↓                              │
 │  ┌───────────────────────────────────────────────────┐  │
 │  │              ViewModel Layer                       │  │
 │  │  • State Management                                │  │
-│  │  • Business Logic Orchestration                    │  │
-│  │  • LiveData/StateFlow emissions                    │  │
-│  └───────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-                           ↓
-┌─────────────────────────────────────────────────────────┐
-│                     Domain Layer                         │
-│  ┌───────────────────────────────────────────────────┐  │
-│  │              Use Cases (Optional)                  │  │
-│  │  • Business logic encapsulation                    │  │
-│  │  • Single responsibility operations                │  │
+│  │  • Business Logic                                  │  │
+│  │  • LiveData emissions                              │  │
 │  └───────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────┘
                            ↓
 ┌─────────────────────────────────────────────────────────┐
 │                      Data Layer                          │
 │  ┌───────────────────────────────────────────────────┐  │
-│  │              Repository Pattern                    │  │
-│  │  • Single source of truth                          │  │
-│  │  • Data source coordination                        │  │
+│  │              Repository (Simple)                   │  │
+│  │  • Data coordination                               │  │
+│  │  • Business logic for data processing              │  │
 │  └───────────────────────────────────────────────────┘  │
 │          │                                      │        │
 │          ↓                                      ↓        │
 │  ┌──────────────┐                    ┌──────────────┐   │
-│  │  Local DB    │                    │  Remote API  │   │
-│  │  (Room)      │                    │  (Retrofit)  │   │
+│  │  JSON Files  │                    │  Remote API  │   │
+│  │              │                    │  (OkHttp)    │   │
 │  └──────────────┘                    └──────────────┘   │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -62,87 +53,75 @@ LaComprago follows the MVVM (Model-View-ViewModel) architecture pattern, which i
 
 **UI Components**
 - Simple, no animations
-- Material Design 3 components
-- Jetpack Compose (optional, for simplicity)
+- Basic Material Design components
 - Focus on functionality over aesthetics
+- Progress indicators for order processing
+- Cancellable operations
 
 ### 2. ViewModel Layer
 
 **Responsibilities**
 - Manage UI state
 - Handle user interactions
-- Coordinate repository calls
+- Coordinate data operations
 - Survive configuration changes
-- Expose data via LiveData/StateFlow
+- Expose data via LiveData
 
 **Key ViewModels**
-- `AuthViewModel`: Manage authentication state
-- `OrderHistoryViewModel`: Handle order list and details
-- `StatisticsViewModel`: Calculate and display statistics
-- `ShoppingCartViewModel`: Manage cart creation and submission
+- `TokenViewModel`: Manage token input and storage
+- `ProductViewModel`: Handle product list and processing
+- `OrderProcessingViewModel`: Manage order download and processing
+- `CartViewModel`: Manage cart creation and submission
 
-### 3. Domain Layer (Simplified)
+### 3. Data Layer
 
-For this simple app, use cases are optional but can be added for:
-- Complex business logic
-- Reusable operations across ViewModels
-- Better testability
+**Repository (Simplified)**
+- `TokenRepository`: Handle token storage (encrypted)
+- `ProductRepository`: Manage product list JSON file
+- `OrderRepository`: Download orders and update products
+- `ProcessedOrdersRepository`: Track which orders have been processed
 
-**Potential Use Cases**
-- `CalculateProductFrequencyUseCase`
-- `CreateShoppingCartUseCase`
-- `SyncOrderHistoryUseCase`
+**Local Storage (JSON Files)**
+- `products.json`: Product list with frequency and last purchase
+- `processed_orders.json`: List of processed order IDs
+- `token.dat`: Encrypted token storage
 
-### 4. Data Layer
-
-**Repository Pattern**
-- `AuthRepository`: Handle OAuth and token management
-- `OrderRepository`: Manage order data (local + remote)
-- `ProductRepository`: Handle product data and statistics
-- `CartRepository`: Manage shopping cart operations
-
-**Local Database (Room)**
-- Cache order history
-- Store product statistics
-- Persist shopping carts
-- Store authentication tokens (encrypted)
-
-**Remote API (Retrofit + OkHttp)**
-- OAuth authentication
-- Fetch order history
+**Remote API (OkHttp Only)**
+- Simple HTTP client
+- Token-based authentication
+- Fetch orders one by one
 - Submit shopping cart
-- API error handling
+- Basic error handling
 
-## Key Technologies
+## Key Technologies (Minimal Dependencies)
 
 ### Core
 - **Kotlin**: Primary language
-- **Coroutines**: Asynchronous operations
-- **Flow**: Reactive streams
+- **Coroutines**: Asynchronous operations (Kotlin standard library)
 
-### Android Jetpack
-- **ViewModel**: UI state management
-- **LiveData/StateFlow**: Observable data holders
-- **Room**: Local database
-- **Navigation Component**: App navigation
-- **Lifecycle**: Lifecycle-aware components
-- **DataStore**: Preferences storage
+### Android Standard
+- **ViewModel**: UI state management (AndroidX)
+- **LiveData**: Observable data holders (AndroidX)
+- **Lifecycle**: Lifecycle-aware components (AndroidX)
 
-### Networking
-- **Retrofit**: REST API client
-- **OkHttp**: HTTP client
-- **Gson/Moshi**: JSON serialization
+### Networking (Minimal)
+- **OkHttp**: HTTP client (no Retrofit)
+- **Gson**: JSON serialization
 
-### Dependency Injection
-- **Hilt**: Dependency injection framework
+### Security (Standard Android)
+- **EncryptedSharedPreferences**: Secure token storage (AndroidX Security)
 
-### Security
-- **EncryptedSharedPreferences**: Secure token storage
-- **Android Keystore**: Cryptographic operations
+### No Additional Dependencies
+- No Hilt/Dagger (manual dependency management)
+- No Room (JSON files instead)
+- No Retrofit (OkHttp only)
+- No Navigation Component (simple Activity/Fragment transitions)
+- No DataStore (EncryptedSharedPreferences only)
 
 ## Design Principles
 
 ### 1. Simplicity First
+- Minimal dependencies
 - No unnecessary animations
 - No complex graphics
 - Focus on functionality
@@ -150,133 +129,157 @@ For this simple app, use cases are optional but can be added for:
 
 ### 2. Single Responsibility
 - Each class has one clear purpose
-- Separation of concerns across layers
+- Simple data flow
 
-### 3. Testability
-- Business logic isolated from UI
-- Repository pattern enables mocking
-- Dependency injection for flexibility
-
-### 4. Maintainability
+### 3. Maintainability
 - Clear code organization
-- Consistent naming conventions
-- Well-documented interfaces
+- Easy to understand
+- Minimal abstraction layers
 
-### 5. Security
-- Encrypted credential storage
+### 4. Security
+- Encrypted token storage
 - Secure API communication (HTTPS)
-- Token refresh handling
 - No sensitive data logging
+
+## Data Storage
+
+### JSON File Structure
+
+**products.json**
+```json
+{
+  "products": [
+    {
+      "id": "prod_123",
+      "name": "Milk 1L",
+      "frequency": 24,
+      "lastPurchase": 1698765432000,
+      "category": "Dairy"
+    }
+  ]
+}
+```
+
+**processed_orders.json**
+```json
+{
+  "processedOrderIds": [
+    "order_123",
+    "order_456"
+  ]
+}
+```
 
 ## Navigation Structure
 
 ```
-Splash Screen
+Token Input Screen
      ↓
-Authentication
-     ↓
-Main Container
-     ├── Order History Tab
-     │        ├── Order List
-     │        └── Order Details
-     ├── Statistics Tab
-     │        ├── Product Frequency
-     │        └── Last Purchase Dates
-     └── Shopping Cart Tab
-              ├── Cart Builder
-              └── Cart Submission
+Product List Screen
+     ├── Refresh Products (with progress)
+     │        ├── Show processing status
+     │        ├── Allow cancellation
+     │        └── Update product list
+     └── Create Shopping Cart
+              └── Submit to API
 ```
 
 ## State Management
 
 ### UI State
-- Sealed classes for different states
+- Simple sealed classes for states
 - Loading, Success, Error states
-- Clear state transitions
+- Processing state with progress
 
 ### Data Flow
 ```
-User Action → ViewModel → Repository → API/Database
+User Action → ViewModel → Repository → API/JSON Files
                   ↑                          ↓
-                  └──────── StateFlow ───────┘
+                  └──────── LiveData ────────┘
 ```
+
+## Order Processing Flow
+
+### Sequential Order Download
+1. User triggers "Refresh Products"
+2. Fetch list of order IDs from API
+3. Filter out already processed orders
+4. For each unprocessed order:
+   - Download order details
+   - Extract products
+   - Update product frequency and last purchase
+   - Add order ID to processed list
+   - Update UI with progress (count)
+   - Check for cancellation
+5. Save updated product list to JSON
+6. Save processed orders to JSON
+
+### Progress Tracking
+- Show current order being processed
+- Show total count of orders
+- Display progress indicator
+- Allow user to cancel at any time
+- Persist partial progress
 
 ## Error Handling
 
 ### Strategy
-- Network errors: Retry mechanism
-- Authentication errors: Re-login flow
-- Data errors: Graceful degradation
+- Network errors: Show message, allow retry
+- Token errors: Prompt for valid token
+- Data errors: Log and skip problematic orders
 - User-friendly error messages
 
 ### Error Types
 - Network errors
-- Authentication errors
-- Data parsing errors
-- Business logic errors
+- Authentication errors (invalid token)
+- JSON parsing errors
+- File I/O errors
 
 ## Threading Model
 
 - **Main Thread**: UI operations only
-- **IO Dispatcher**: Network and database operations
-- **Default Dispatcher**: Complex calculations
-- **Coroutines**: Structured concurrency
+- **IO Dispatcher**: Network and file operations
+- **Coroutines**: Simple async operations
 
 ## Security Considerations
 
 ### Data Security
-- OAuth tokens encrypted at rest
+- Token encrypted at rest using EncryptedSharedPreferences
 - HTTPS for all API communications
-- Certificate pinning (optional)
 - No sensitive data in logs
+- JSON files stored in app-private directory
 
 ### Authentication
-- OAuth 2.0 flow
+- Simple token-based authentication
+- Token input via text field
 - Secure token storage
-- Automatic token refresh
-- Proper logout cleanup
+- Token validation on first API call
 
 ## Performance Considerations
 
 ### Optimization
-- Lazy loading for order lists
-- Pagination for large datasets
-- Database indexing for queries
-- Image caching (if needed)
-- Background data sync
+- Sequential order processing (one at a time)
+- Incremental JSON file updates
+- Memory-efficient order processing
+- Cancellable operations
 
 ### Memory Management
-- Lifecycle-aware components
+- Process orders one by one to minimize memory
+- Release resources after each order
 - Proper coroutine cancellation
-- Efficient database queries
-- Minimal object retention
-
-## Future Scalability
-
-### Potential Enhancements
-- Modularization (feature modules)
-- Offline-first architecture
-- Multi-user support
-- Background sync workers
-- Widget support
 
 ## Testing Strategy
 
 ### Unit Tests
 - ViewModel logic
 - Repository implementations
-- Use case business logic
-- Utility functions
+- JSON parsing/serialization
+- Product frequency calculations
 
 ### Integration Tests
-- Repository with database
-- Repository with API
-- End-to-end flows
-
-### UI Tests
-- Critical user flows
-- Navigation testing
-- State verification
+- API calls with real token
+- JSON file operations
+- Order processing flow
 
 ## Build Configuration
 
@@ -285,17 +288,40 @@ User Action → ViewModel → Repository → API/Database
 project/
 ├── build.gradle (root)
 ├── app/
-│   ├── build.gradle (app module)
+│   ├── build.gradle (app module - minimal dependencies)
 │   └── src/
 │       ├── main/
 │       ├── test/
 │       └── androidTest/
 ```
 
-### Build Variants
-- Debug: Development with logging
-- Release: Production-ready, obfuscated
+### Minimal Dependencies
+```gradle
+dependencies {
+    // Android Core
+    implementation 'androidx.core:core-ktx'
+    implementation 'androidx.appcompat:appcompat'
+    implementation 'com.google.android.material:material'
+    
+    // Lifecycle
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx'
+    
+    // Networking
+    implementation 'com.squareup.okhttp3:okhttp'
+    
+    // JSON
+    implementation 'com.google.code.gson:gson'
+    
+    // Security
+    implementation 'androidx.security:security-crypto'
+    
+    // Testing
+    testImplementation 'junit:junit'
+    androidTestImplementation 'androidx.test.ext:junit'
+}
+```
 
 ## Conclusion
 
-This architecture provides a solid foundation for the LaComprago application, emphasizing simplicity, maintainability, and testability while following Android best practices.
+This simplified architecture provides a solid foundation for LaCompraGo application, emphasizing simplicity, minimal dependencies, and maintainability while following basic Android best practices.

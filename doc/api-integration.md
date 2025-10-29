@@ -1,8 +1,8 @@
-# LaComprago - API Integration
+# LaCompraGo - API Integration
 
 ## Overview
 
-This document describes the API integration strategy for LaComprago, including authentication, endpoints, request/response formats, error handling, and best practices.
+This document describes the simplified API integration strategy for LaCompraGo, using token-based authentication and OkHttp for HTTP communication (no Retrofit).
 
 ## API Architecture
 
@@ -10,7 +10,7 @@ This document describes the API integration strategy for LaComprago, including a
 
 ```kotlin
 object ApiConfig {
-    const val BASE_URL = "https://api.supermarket.example.com/v1/"
+    const val BASE_URL = "https://api.supermarket.example.com/"
     const val CONNECT_TIMEOUT = 30L // seconds
     const val READ_TIMEOUT = 30L // seconds
     const val WRITE_TIMEOUT = 30L // seconds
@@ -19,328 +19,250 @@ object ApiConfig {
 
 ### HTTP Client Setup
 
-**OkHttp Configuration**
+**OkHttp Configuration (Minimal)**
 ```kotlin
-OkHttpClient.Builder()
-    .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
-    .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
-    .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
-    .addInterceptor(AuthInterceptor())
-    .addInterceptor(LoggingInterceptor())
-    .addInterceptor(NetworkConnectionInterceptor())
-    .build()
+fun createHttpClient(tokenStorage: TokenStorage): OkHttpClient {
+    return OkHttpClient.Builder()
+        .connectTimeout(ApiConfig.CONNECT_TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(ApiConfig.READ_TIMEOUT, TimeUnit.SECONDS)
+        .writeTimeout(ApiConfig.WRITE_TIMEOUT, TimeUnit.SECONDS)
+        .addInterceptor(TokenInterceptor(tokenStorage))
+        .build()
+}
 ```
 
-**Retrofit Configuration**
-```kotlin
-Retrofit.Builder()
-    .baseUrl(BASE_URL)
-    .client(okHttpClient)
-    .addConverterFactory(GsonConverterFactory.create())
-    .build()
-```
+**No Retrofit**
+- Direct OkHttp usage
+- Manual request building
+- Simpler, fewer dependencies
+- More control over requests
 
 ## API Endpoints
 
-### 1. Authentication Endpoints
+### 1. Token Validation
 
-#### OAuth Authorization
-```
-GET /oauth/authorize
-```
+Validate the token on first use.
 
-**Query Parameters**
-- `client_id`: Application client ID
-- `redirect_uri`: Callback URI
-- `response_type`: "code"
-- `scope`: Requested permissions (e.g., "orders:read cart:write")
-- `state`: CSRF protection token
-
-**Response**
-- Redirects to authorization page
-- Returns authorization code on success
-
-#### Token Exchange
 ```
-POST /oauth/token
-```
-
-**Request Body**
-```json
-{
-    "grant_type": "authorization_code",
-    "code": "AUTH_CODE",
-    "client_id": "CLIENT_ID",
-    "client_secret": "CLIENT_SECRET",
-    "redirect_uri": "REDIRECT_URI"
-}
-```
-
-**Response (200 OK)**
-```json
-{
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "refresh_token_value",
-    "token_type": "Bearer",
-    "expires_in": 3600,
-    "scope": "orders:read cart:write"
-}
-```
-
-#### Token Refresh
-```
-POST /oauth/token
-```
-
-**Request Body**
-```json
-{
-    "grant_type": "refresh_token",
-    "refresh_token": "REFRESH_TOKEN",
-    "client_id": "CLIENT_ID",
-    "client_secret": "CLIENT_SECRET"
-}
-```
-
-**Response (200 OK)**
-```json
-{
-    "access_token": "new_access_token",
-    "refresh_token": "new_refresh_token",
-    "token_type": "Bearer",
-    "expires_in": 3600
-}
-```
-
-### 2. User Endpoints
-
-#### Get User Profile
-```
-GET /api/user/profile
+GET /api/validate
 ```
 
 **Headers**
 ```
-Authorization: Bearer {access_token}
+Authorization: Bearer {token}
 ```
 
 **Response (200 OK)**
 ```json
 {
-    "id": "user_123",
-    "email": "user@example.com",
-    "name": "John Doe",
-    "created_at": "2024-01-15T10:30:00Z"
+  "valid": true
 }
 ```
 
-### 3. Orders Endpoints
+**Response (401 Unauthorized)**
+```json
+{
+  "error": "Invalid token"
+}
+```
 
-#### Get Order History
+### 2. List Orders
+
+Get list of order IDs.
+
 ```
 GET /api/orders
 ```
 
 **Headers**
 ```
-Authorization: Bearer {access_token}
+Authorization: Bearer {token}
 ```
-
-**Query Parameters**
-- `page`: Page number (default: 1)
-- `page_size`: Items per page (default: 20, max: 100)
-- `start_date`: ISO 8601 date (optional)
-- `end_date`: ISO 8601 date (optional)
-- `status`: Order status filter (optional)
 
 **Response (200 OK)**
 ```json
 {
-    "orders": [
-        {
-            "id": "order_123",
-            "order_number": "ORD-2024-001",
-            "order_date": "2024-10-20T15:30:00Z",
-            "total_amount": 125.50,
-            "currency": "EUR",
-            "status": "COMPLETED",
-            "store_id": "store_001",
-            "store_name": "SuperMarket Downtown",
-            "items": [
-                {
-                    "id": "item_456",
-                    "product_id": "prod_789",
-                    "product_name": "Milk 1L",
-                    "quantity": 2,
-                    "unit_price": 1.99,
-                    "total_price": 3.98,
-                    "category": "Dairy",
-                    "brand": "Local Farm",
-                    "unit": "liter"
-                }
-            ]
-        }
-    ],
-    "total": 150,
-    "page": 1,
-    "page_size": 20,
-    "has_more": true
+  "orders": [
+    {
+      "id": "order_123",
+      "orderDate": "2024-10-20T15:30:00Z"
+    },
+    {
+      "id": "order_456",
+      "orderDate": "2024-10-15T10:20:00Z"
+    }
+  ]
 }
 ```
 
-#### Get Order Details
+### 3. Get Order Details
+
+Fetch details of a specific order.
+
 ```
-GET /api/orders/{order_id}
+GET /api/orders/{orderId}
 ```
 
 **Headers**
 ```
-Authorization: Bearer {access_token}
+Authorization: Bearer {token}
 ```
 
 **Path Parameters**
-- `order_id`: Order identifier
+- `orderId`: Order identifier
 
 **Response (200 OK)**
 ```json
 {
-    "id": "order_123",
-    "order_number": "ORD-2024-001",
-    "order_date": "2024-10-20T15:30:00Z",
-    "total_amount": 125.50,
-    "currency": "EUR",
-    "status": "COMPLETED",
-    "store_id": "store_001",
-    "store_name": "SuperMarket Downtown",
-    "items": [...]
+  "id": "order_123",
+  "orderNumber": "ORD-2024-001",
+  "orderDate": "2024-10-20T15:30:00Z",
+  "totalAmount": 125.50,
+  "items": [
+    {
+      "productId": "prod_123",
+      "productName": "Milk 1L",
+      "quantity": 2,
+      "category": "Dairy"
+    },
+    {
+      "productId": "prod_456",
+      "productName": "Bread",
+      "quantity": 1,
+      "category": "Bakery"
+    }
+  ]
 }
 ```
 
-### 4. Shopping Cart Endpoints
+### 4. Create Shopping Cart
 
-#### Create Shopping Cart
+Submit a shopping cart to the API.
+
 ```
 POST /api/cart
 ```
 
 **Headers**
 ```
-Authorization: Bearer {access_token}
+Authorization: Bearer {token}
 Content-Type: application/json
 ```
 
 **Request Body**
 ```json
 {
-    "items": [
-        {
-            "product_id": "prod_789",
-            "quantity": 2
-        },
-        {
-            "product_id": "prod_123",
-            "quantity": 1
-        }
-    ]
+  "items": [
+    {
+      "productId": "prod_123",
+      "quantity": 2
+    },
+    {
+      "productId": "prod_456",
+      "quantity": 1
+    }
+  ]
 }
 ```
 
 **Response (201 Created)**
 ```json
 {
-    "cart_id": "cart_456",
-    "status": "SUBMITTED",
-    "created_at": "2024-10-28T12:00:00Z",
-    "items": [
-        {
-            "product_id": "prod_789",
-            "product_name": "Milk 1L",
-            "quantity": 2,
-            "price": 1.99,
-            "total": 3.98
-        }
-    ],
-    "total_amount": 25.50
+  "cartId": "cart_789",
+  "status": "CREATED",
+  "createdAt": "2024-10-28T12:00:00Z"
 }
 ```
 
-#### Get Cart Status
-```
-GET /api/cart/{cart_id}
-```
+## API Client Implementation
 
-**Headers**
-```
-Authorization: Bearer {access_token}
-```
+### Simple OkHttp API Client
 
-**Path Parameters**
-- `cart_id`: Cart identifier
-
-**Response (200 OK)**
-```json
-{
-    "cart_id": "cart_456",
-    "status": "PROCESSING",
-    "created_at": "2024-10-28T12:00:00Z",
-    "updated_at": "2024-10-28T12:05:00Z",
-    "items": [...],
-    "total_amount": 25.50
-}
-```
-
-### 5. Products Endpoints (If Available)
-
-#### Search Products
-```
-GET /api/products/search
-```
-
-**Headers**
-```
-Authorization: Bearer {access_token}
-```
-
-**Query Parameters**
-- `q`: Search query
-- `category`: Filter by category
-- `page`: Page number
-- `page_size`: Items per page
-
-**Response (200 OK)**
-```json
-{
-    "products": [
-        {
-            "id": "prod_789",
-            "name": "Milk 1L",
-            "category": "Dairy",
-            "brand": "Local Farm",
-            "unit": "liter",
-            "current_price": 1.99,
-            "in_stock": true
+```kotlin
+class ApiClient(
+    private val httpClient: OkHttpClient,
+    private val gson: Gson
+) {
+    
+    fun validateToken(token: String): Response {
+        val request = Request.Builder()
+            .url("${ApiConfig.BASE_URL}api/validate")
+            .header("Authorization", "Bearer $token")
+            .get()
+            .build()
+        
+        return httpClient.newCall(request).execute()
+    }
+    
+    suspend fun getOrderList(): List<OrderSummary> = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("${ApiConfig.BASE_URL}api/orders")
+            .get()
+            .build()
+        
+        val response = httpClient.newCall(request).execute()
+        
+        if (!response.isSuccessful) {
+            throw ApiException("Failed to fetch orders: ${response.code}")
         }
-    ],
-    "total": 50,
-    "page": 1,
-    "page_size": 20
+        
+        val json = response.body?.string() ?: throw ApiException("Empty response")
+        val orderListResponse = gson.fromJson(json, OrderListResponse::class.java)
+        
+        orderListResponse.orders
+    }
+    
+    suspend fun getOrderDetails(orderId: String): OrderResponse = withContext(Dispatchers.IO) {
+        val request = Request.Builder()
+            .url("${ApiConfig.BASE_URL}api/orders/$orderId")
+            .get()
+            .build()
+        
+        val response = httpClient.newCall(request).execute()
+        
+        if (!response.isSuccessful) {
+            throw ApiException("Failed to fetch order $orderId: ${response.code}")
+        }
+        
+        val json = response.body?.string() ?: throw ApiException("Empty response")
+        gson.fromJson(json, OrderResponse::class.java)
+    }
+    
+    suspend fun createCart(cartRequest: CartRequest): CartResponse = withContext(Dispatchers.IO) {
+        val json = gson.toJson(cartRequest)
+        val body = json.toRequestBody("application/json".toMediaType())
+        
+        val request = Request.Builder()
+            .url("${ApiConfig.BASE_URL}api/cart")
+            .post(body)
+            .build()
+        
+        val response = httpClient.newCall(request).execute()
+        
+        if (!response.isSuccessful) {
+            throw ApiException("Failed to create cart: ${response.code}")
+        }
+        
+        val responseJson = response.body?.string() ?: throw ApiException("Empty response")
+        gson.fromJson(responseJson, CartResponse::class.java)
+    }
 }
 ```
 
 ## Interceptors
 
-### 1. AuthInterceptor
+### Token Interceptor
 
-**Purpose**: Add authentication token to requests
+Add authentication token to all requests.
 
 ```kotlin
-class AuthInterceptor(
-    private val tokenProvider: TokenProvider
+class TokenInterceptor(
+    private val tokenStorage: TokenStorage
 ) : Interceptor {
+    
     override fun intercept(chain: Chain): Response {
         val original = chain.request()
-        
-        val token = tokenProvider.getAccessToken()
+        val token = tokenStorage.getToken()
         
         val request = if (token != null) {
             original.newBuilder()
@@ -352,18 +274,10 @@ class AuthInterceptor(
         
         val response = chain.proceed(request)
         
-        // Handle token expiration (401)
+        // Handle 401 Unauthorized
         if (response.code == 401) {
-            // Attempt token refresh
-            val newToken = tokenProvider.refreshToken()
-            if (newToken != null) {
-                // Retry with new token
-                return chain.proceed(
-                    original.newBuilder()
-                        .header("Authorization", "Bearer $newToken")
-                        .build()
-                )
-            }
+            // Token is invalid, clear it
+            tokenStorage.clearToken()
         }
         
         return response
@@ -371,9 +285,314 @@ class AuthInterceptor(
 }
 ```
 
-### 2. LoggingInterceptor
+## Error Handling
 
-**Purpose**: Log HTTP requests and responses (debug builds only)
+### API Exception
+
+```kotlin
+class ApiException(message: String) : Exception(message)
+
+sealed class ApiError {
+    object NetworkError : ApiError()
+    object Unauthorized : ApiError()
+    data class ServerError(val code: Int) : ApiError()
+    data class Unknown(val message: String) : ApiError()
+}
+
+fun handleApiError(exception: Exception): ApiError {
+    return when (exception) {
+        is IOException -> ApiError.NetworkError
+        is ApiException -> {
+            if (exception.message?.contains("401") == true) {
+                ApiError.Unauthorized
+            } else {
+                ApiError.Unknown(exception.message ?: "Unknown error")
+            }
+        }
+        else -> ApiError.Unknown(exception.message ?: "Unknown error")
+    }
+}
+```
+
+### Retry Strategy
+
+Simple retry for network errors.
+
+```kotlin
+suspend fun <T> retryApiCall(
+    maxRetries: Int = 3,
+    delayMs: Long = 1000,
+    block: suspend () -> T
+): T {
+    var lastException: Exception? = null
+    
+    repeat(maxRetries) { attempt ->
+        try {
+            return block()
+        } catch (e: IOException) {
+            lastException = e
+            if (attempt < maxRetries - 1) {
+                delay(delayMs * (attempt + 1)) // Exponential backoff
+            }
+        }
+    }
+    
+    throw lastException ?: Exception("Unknown error")
+}
+```
+
+## HTTP Status Codes
+
+| Code | Meaning | Action |
+|------|---------|--------|
+| 200 | Success | Process response |
+| 201 | Created | Resource created successfully |
+| 400 | Bad Request | Validate request parameters |
+| 401 | Unauthorized | Invalid token - prompt for new token |
+| 404 | Not Found | Resource doesn't exist |
+| 500 | Server Error | Retry with backoff |
+| 503 | Service Unavailable | Retry later |
+
+## Order Processing Flow
+
+### Sequential Order Download
+
+```kotlin
+suspend fun processOrders(
+    apiClient: ApiClient,
+    onProgress: (Int, Int, String) -> Unit,
+    shouldContinue: () -> Boolean
+): Int {
+    var processedCount = 0
+    
+    // 1. Get list of orders
+    val orders = apiClient.getOrderList()
+    
+    // 2. Load processed orders
+    val processedOrders = loadProcessedOrders()
+    
+    // 3. Filter unprocessed orders
+    val unprocessedOrders = orders.filter { 
+        it.id !in processedOrders.processedOrderIds 
+    }
+    
+    val totalOrders = unprocessedOrders.size
+    
+    // 4. Process each order sequentially
+    for ((index, orderSummary) in unprocessedOrders.withIndex()) {
+        // Check if cancelled
+        if (!shouldContinue()) {
+            break
+        }
+        
+        try {
+            // Update progress
+            onProgress(index + 1, totalOrders, orderSummary.id)
+            
+            // Fetch order details
+            val order = apiClient.getOrderDetails(orderSummary.id)
+            
+            // Update products
+            updateProductsFromOrder(order)
+            
+            // Mark order as processed
+            markOrderAsProcessed(orderSummary.id)
+            
+            processedCount++
+            
+        } catch (e: Exception) {
+            // Log error but continue with next order
+            Log.e("OrderProcessing", "Error processing order ${orderSummary.id}", e)
+        }
+    }
+    
+    return processedCount
+}
+```
+
+## Network Connectivity
+
+### Check Network Before Requests
+
+```kotlin
+fun isNetworkAvailable(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(
+        Context.CONNECTIVITY_SERVICE
+    ) as ConnectivityManager
+    
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network)
+    
+    return capabilities?.hasCapability(
+        NetworkCapabilities.NET_CAPABILITY_INTERNET
+    ) == true
+}
+```
+
+## Security Best Practices
+
+### 1. HTTPS Only
+- All API calls use HTTPS
+- No plain HTTP allowed
+
+### 2. Token Security
+- Store token encrypted
+- Never log token
+- Clear token on 401 error
+- Use token in Authorization header
+
+### 3. Request Validation
+- Validate all input parameters
+- Sanitize user input
+- Use HTTPS for sensitive data
+
+## Testing
+
+### API Client Tests
+
+```kotlin
+@Test
+fun `test get order list`() = runTest {
+    val mockResponse = """
+        {
+          "orders": [
+            {"id": "order_123", "orderDate": "2024-10-20T15:30:00Z"}
+          ]
+        }
+    """.trimIndent()
+    
+    mockWebServer.enqueue(MockResponse().setBody(mockResponse))
+    
+    val orders = apiClient.getOrderList()
+    
+    assertEquals(1, orders.size)
+    assertEquals("order_123", orders[0].id)
+}
+
+@Test
+fun `test unauthorized error`() = runTest {
+    mockWebServer.enqueue(MockResponse().setResponseCode(401))
+    
+    assertThrows<ApiException> {
+        apiClient.getOrderList()
+    }
+}
+```
+
+## Progress Tracking
+
+### Progress Callback
+
+```kotlin
+interface OrderProcessingCallback {
+    fun onProgress(current: Int, total: Int, currentOrderId: String)
+    fun onComplete(processedCount: Int)
+    fun onError(error: String, processedCount: Int)
+    fun onCancelled(processedCount: Int)
+}
+```
+
+### Usage
+
+```kotlin
+viewModelScope.launch {
+    try {
+        val processedCount = processOrders(
+            apiClient = apiClient,
+            onProgress = { current, total, orderId ->
+                _processingState.value = OrderProcessingState.Processing(
+                    currentOrder = current,
+                    totalOrders = total,
+                    currentOrderId = orderId
+                )
+            },
+            shouldContinue = { !isCancelled }
+        )
+        
+        _processingState.value = if (isCancelled) {
+            OrderProcessingState.Cancelled(processedCount)
+        } else {
+            OrderProcessingState.Completed(processedCount)
+        }
+        
+    } catch (e: Exception) {
+        _processingState.value = OrderProcessingState.Error(
+            message = e.message ?: "Unknown error",
+            processedCount = 0
+        )
+    }
+}
+```
+
+## API Mocking for Development
+
+### MockWebServer for Testing
+
+```kotlin
+class MockApiServer {
+    private val mockWebServer = MockWebServer()
+    
+    fun start() {
+        mockWebServer.start()
+    }
+    
+    fun shutdown() {
+        mockWebServer.shutdown()
+    }
+    
+    fun enqueueOrderList(orders: List<OrderSummary>) {
+        val response = OrderListResponse(orders)
+        val json = gson.toJson(response)
+        mockWebServer.enqueue(MockResponse().setBody(json))
+    }
+    
+    fun enqueueOrderDetails(order: OrderResponse) {
+        val json = gson.toJson(order)
+        mockWebServer.enqueue(MockResponse().setBody(json))
+    }
+    
+    fun getUrl(): String {
+        return mockWebServer.url("/").toString()
+    }
+}
+```
+
+## Rate Limiting
+
+### Simple Rate Limiter
+
+```kotlin
+class RateLimiter(private val requestsPerMinute: Int = 60) {
+    private val requestTimes = mutableListOf<Long>()
+    
+    suspend fun acquire() {
+        val now = System.currentTimeMillis()
+        val oneMinuteAgo = now - 60_000
+        
+        // Remove old entries
+        requestTimes.removeAll { it < oneMinuteAgo }
+        
+        if (requestTimes.size >= requestsPerMinute) {
+            // Wait until we can make another request
+            val oldestRequest = requestTimes.first()
+            val waitTime = 60_000 - (now - oldestRequest)
+            delay(waitTime)
+        }
+        
+        requestTimes.add(System.currentTimeMillis())
+    }
+}
+
+// Usage
+suspend fun getOrderWithRateLimit(orderId: String): OrderResponse {
+    rateLimiter.acquire()
+    return apiClient.getOrderDetails(orderId)
+}
+```
+
+## Monitoring
+
+### Log API Calls (Debug Only)
 
 ```kotlin
 class LoggingInterceptor : Interceptor {
@@ -395,265 +614,12 @@ class LoggingInterceptor : Interceptor {
 }
 ```
 
-### 3. NetworkConnectionInterceptor
-
-**Purpose**: Check network connectivity before making requests
-
-```kotlin
-class NetworkConnectionInterceptor(
-    private val context: Context
-) : Interceptor {
-    override fun intercept(chain: Chain): Response {
-        if (!isNetworkAvailable()) {
-            throw NoNetworkException()
-        }
-        
-        return chain.proceed(chain.request())
-    }
-    
-    private fun isNetworkAvailable(): Boolean {
-        val connectivityManager = context.getSystemService(
-            Context.CONNECTIVITY_SERVICE
-        ) as ConnectivityManager
-        
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network)
-        
-        return capabilities?.hasCapability(
-            NetworkCapabilities.NET_CAPABILITY_INTERNET
-        ) == true
-    }
-}
-```
-
-## Error Handling
-
-### Error Response Format
-
-**Standard Error Response**
-```json
-{
-    "error": {
-        "code": "INVALID_TOKEN",
-        "message": "The provided access token is invalid or expired",
-        "details": {
-            "field": "access_token",
-            "reason": "expired"
-        }
-    }
-}
-```
-
-### HTTP Status Codes
-
-| Code | Meaning | Action |
-|------|---------|--------|
-| 200 | Success | Process response |
-| 201 | Created | Resource created successfully |
-| 400 | Bad Request | Validate request parameters |
-| 401 | Unauthorized | Refresh token or re-authenticate |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Resource doesn't exist |
-| 429 | Too Many Requests | Implement rate limiting backoff |
-| 500 | Server Error | Retry with exponential backoff |
-| 503 | Service Unavailable | Retry later |
-
-### Error Models
-
-```kotlin
-data class ApiError(
-    val code: String,
-    val message: String,
-    val details: Map<String, Any>?
-)
-
-sealed class ApiException(message: String) : Exception(message) {
-    class NetworkException(message: String) : ApiException(message)
-    class AuthException(message: String) : ApiException(message)
-    class ServerException(message: String) : ApiException(message)
-    class ValidationException(message: String) : ApiException(message)
-    class NotFoundException(message: String) : ApiException(message)
-}
-```
-
-### Retry Strategy
-
-**Exponential Backoff**
-```kotlin
-class RetryPolicy {
-    companion object {
-        const val MAX_RETRIES = 3
-        const val INITIAL_BACKOFF_MS = 1000L
-        const val MAX_BACKOFF_MS = 10000L
-        const val BACKOFF_MULTIPLIER = 2.0
-    }
-    
-    fun shouldRetry(attempt: Int, exception: Exception): Boolean {
-        return attempt < MAX_RETRIES && isRetryable(exception)
-    }
-    
-    private fun isRetryable(exception: Exception): Boolean {
-        return exception is IOException ||
-               (exception is HttpException && 
-                exception.code() in listOf(429, 500, 503))
-    }
-    
-    fun getBackoffDelay(attempt: Int): Long {
-        val delay = (INITIAL_BACKOFF_MS * 
-                    Math.pow(BACKOFF_MULTIPLIER, attempt.toDouble())).toLong()
-        return minOf(delay, MAX_BACKOFF_MS)
-    }
-}
-```
-
-## Rate Limiting
-
-### Client-Side Rate Limiting
-
-**Strategy**
-- Implement request throttling
-- Queue requests when rate limit reached
-- Display user-friendly messages
-
-**Implementation**
-```kotlin
-class RateLimiter {
-    private val requestTimes = mutableListOf<Long>()
-    private val maxRequestsPerMinute = 60
-    
-    fun canMakeRequest(): Boolean {
-        val now = System.currentTimeMillis()
-        val oneMinuteAgo = now - 60_000
-        
-        // Remove old entries
-        requestTimes.removeAll { it < oneMinuteAgo }
-        
-        return requestTimes.size < maxRequestsPerMinute
-    }
-    
-    fun recordRequest() {
-        requestTimes.add(System.currentTimeMillis())
-    }
-}
-```
-
-## Caching Strategy
-
-### Cache Headers
-
-**Respect Server Cache Directives**
-- `Cache-Control`
-- `ETag`
-- `Last-Modified`
-
-**OkHttp Cache**
-```kotlin
-val cacheSize = 10 * 1024 * 1024 // 10 MB
-val cache = Cache(context.cacheDir, cacheSize)
-
-OkHttpClient.Builder()
-    .cache(cache)
-    .build()
-```
-
-### Data Freshness
-
-**Order History**
-- Cache for 5 minutes
-- Refresh on pull-to-refresh
-
-**Product Data**
-- Cache for 1 hour
-- Refresh when creating cart
-
-**User Profile**
-- Cache for session duration
-- Refresh on app launch
-
-## Security Best Practices
-
-### 1. HTTPS Only
-- All API calls use HTTPS
-- No plain HTTP allowed
-
-### 2. Certificate Pinning (Optional)
-```kotlin
-val certificatePinner = CertificatePinner.Builder()
-    .add("api.supermarket.example.com", "sha256/AAAAAAAAAA...")
-    .build()
-
-OkHttpClient.Builder()
-    .certificatePinner(certificatePinner)
-    .build()
-```
-
-### 3. Token Security
-- Store tokens encrypted
-- Never log tokens
-- Clear tokens on logout
-- Rotate refresh tokens
-
-### 4. Request Validation
-- Validate all input parameters
-- Sanitize user input
-- Use HTTPS for sensitive data
-
-## Testing Strategy
-
-### 1. Mock API Responses
-```kotlin
-@Test
-fun testOrderHistorySuccess() {
-    val mockResponse = MockResponse()
-        .setResponseCode(200)
-        .setBody(ordersJson)
-    
-    mockWebServer.enqueue(mockResponse)
-    
-    // Test API call
-}
-```
-
-### 2. Error Scenarios
-- Network failures
-- Token expiration
-- Invalid responses
-- Rate limiting
-
-### 3. Integration Tests
-- End-to-end API flows
-- Authentication process
-- Data synchronization
-
-## Monitoring and Analytics
-
-### API Metrics
-- Request success/failure rates
-- Response times
-- Error frequency by endpoint
-- Network error rates
-
-### Logging
-- Request/response in debug mode
-- Error logs in production
-- Performance metrics
-- User actions
-
-## API Versioning
-
-### Version Strategy
-- Use versioned endpoints (`/v1/`, `/v2/`)
-- Maintain backward compatibility
-- Gradual migration path
-
-### Version Handling
-```kotlin
-object ApiVersion {
-    const val CURRENT = "v1"
-    const val SUPPORTED = listOf("v1")
-}
-```
-
 ## Conclusion
 
-This API integration strategy ensures secure, reliable, and efficient communication with the supermarket API, handling authentication, data synchronization, error scenarios, and providing a solid foundation for the LaComprago application.
+This simplified API integration strategy provides:
+- Minimal dependencies (OkHttp + Gson only)
+- Simple token-based authentication
+- Sequential order processing with progress tracking
+- Proper error handling
+- Cancellable operations
+- Suitable for LaCompraGo's requirements

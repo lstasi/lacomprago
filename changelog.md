@@ -1,31 +1,35 @@
 # Changelog
 
-All notable changes to LaComprago will be documented in this file.
+All notable changes to LaCompraGo will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Simplified architecture to use minimal dependencies
+- Changed from OAuth to simple token-based authentication
+- Changed from Room database to JSON file storage
+- Changed from Retrofit to OkHttp only
+- Removed Hilt dependency injection (manual DI)
+- Simplified order processing to sequential (one by one)
+
 ### Added
-- Initial project setup and architecture design
-- Created documentation structure (README, todo, changelog)
-- Defined MVVM architecture for the application
-- Documented data models and entities
-- Planned OAuth authentication flow
-- Specified API integration strategy
-- Designed feature specifications for:
-  - Order history management
-  - Statistical analysis of purchases
-  - Product frequency tracking
-  - Shopping cart creation
+- Token input screen for simple authentication
+- Sequential order processing with progress tracking
+- Cancellable order processing with partial progress save
+- JSON file storage for products and processed orders
+- Product frequency and last purchase tracking
+- Shopping cart auto-generation from frequent products
 
 ### Documentation
-- Architecture overview document
-- Data models specification
-- API integration guide
-- Authentication flow documentation
-- Feature specifications
+- Complete architecture redesign for simplicity
+- Simplified data models (JSON-based)
+- Token-based authentication flow
+- Simplified API integration (OkHttp only)
+- Updated feature specifications
+- Updated task breakdown in todo.md
 
 ## [0.1.0] - TBD (Design Phase)
 
@@ -34,12 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic project structure defined
 - Target platform: Android 14 (API Level 34)
 - Language: Kotlin
-- Architecture: MVVM with Repository pattern
+- Architecture: Simplified MVVM with minimal dependencies
 
 ### Notes
 - This version represents the design and planning phase
 - No executable code has been implemented yet
-- Focus on creating solid architecture foundation
+- Focus on creating simple, maintainable architecture
 
 ---
 

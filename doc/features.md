@@ -1,26 +1,24 @@
-# LaComprago - Feature Specifications
+# LaCompraGo - Feature Specifications
 
 ## Overview
 
-This document provides detailed specifications for each feature of the LaComprago application, including user stories, acceptance criteria, and technical requirements.
+This document provides detailed specifications for each feature of the simplified LaCompraGo application.
 
-## Feature 1: OAuth Authentication
+## Feature 1: Token Authentication
 
 ### User Story
-As a user, I want to securely authenticate with my supermarket account using OAuth, so that I can access my order history and create shopping carts.
+As a user, I want to input my API token, so that I can access the supermarket API to manage my shopping.
 
 ### Requirements
 
 **Functional Requirements**
-- User can initiate login from the app
-- Login opens browser for OAuth authentication
-- App handles OAuth callback and stores token securely
-- App automatically refreshes expired tokens
-- User can logout and clear session
+- User can input/paste token in a text field
+- Token is validated on first API call
+- Token is stored encrypted locally
+- User can clear token and input new one
 
 **Non-Functional Requirements**
-- Authentication must complete within 30 seconds
-- Tokens must be stored encrypted
+- Token must be stored encrypted
 - Session persists across app restarts
 - No sensitive data in logs
 
@@ -28,579 +26,333 @@ As a user, I want to securely authenticate with my supermarket account using OAu
 
 ```
 1. User opens app
-2. App checks for valid token
-   ├─ Token valid → Navigate to Home
-   └─ Token invalid → Show Login Screen
-3. User taps "Login" button
-4. Browser opens with OAuth page
-5. User enters credentials
-6. User grants permissions
-7. Browser redirects back to app
-8. App exchanges code for token
-9. App stores token securely
-10. App navigates to Home screen
+2. App checks for stored token
+   ├─ Token exists → Navigate to Product List
+   └─ No token → Show Token Input Screen
+3. User pastes/types token
+4. User taps "Submit"
+5. App validates token with API call
+   ├─ Valid → Navigate to Product List
+   └─ Invalid → Show error, retry
 ```
 
-### UI Screens
+### UI Screen
 
-**Login Screen**
-- App logo
-- Welcome message
-- "Login with OAuth" button
-- Privacy policy link
-- Terms of service link
-
-**Loading Screen**
-- Progress indicator
-- "Authenticating..." message
-- Cancel button
-
-### Acceptance Criteria
-
-- [ ] Login button initiates OAuth flow
-- [ ] OAuth opens in Chrome Custom Tabs
-- [ ] Successful login stores token
-- [ ] Failed login shows error message
-- [ ] Token persists after app restart
-- [ ] Expired tokens refresh automatically
-- [ ] Logout clears all session data
-- [ ] Network errors handled gracefully
-
----
-
-## Feature 2: Order History
-
-### User Story
-As a user, I want to view my past orders, so that I can see what I have purchased previously.
-
-### Requirements
-
-**Functional Requirements**
-- Display list of past orders
-- Show order date, total amount, and item count
-- Allow filtering by date range
-- Support pull-to-refresh
-- Implement pagination for large order lists
-- Cache orders for offline viewing
-- Show order details on tap
-
-**Non-Functional Requirements**
-- List should load within 3 seconds
-- Smooth scrolling performance
-- Support for 1000+ orders
-- Offline access to cached data
-
-### User Flow
-
-```
-1. User navigates to Order History tab
-2. App fetches orders from API
-3. App displays order list
-4. User scrolls through orders
-5. User taps on an order
-6. App shows order details
-7. User can return to list
-```
-
-### UI Screens
-
-**Order List Screen**
+**Token Input Screen**
 ```
 ┌─────────────────────────────────┐
-│  Order History        🔄 Filter  │
+│  LaCompraGo                     │
 ├─────────────────────────────────┤
 │                                 │
-│  📦 Oct 20, 2024                │
-│     €125.50 • 15 items          │
-│     SuperMarket Downtown         │
+│  Enter your API token:          │
 │                                 │
-│  📦 Oct 15, 2024                │
-│     €89.30 • 10 items           │
-│     SuperMarket Central          │
+│  ┌───────────────────────────┐  │
+│  │ [Paste/type token here]  │  │
+│  └───────────────────────────┘  │
 │                                 │
-│  📦 Oct 10, 2024                │
-│     €156.80 • 20 items          │
-│     SuperMarket Downtown         │
+│  [Submit]                       │
 │                                 │
-│  [Load More]                    │
+│  Error: [error message if any]  │
 │                                 │
 └─────────────────────────────────┘
 ```
 
-**Order Details Screen**
+### Acceptance Criteria
+
+- [x] Text field for token input
+- [x] Submit button validates token
+- [x] Successful validation stores token encrypted
+- [x] Failed validation shows error message
+- [x] Token persists after app restart
+- [x] Clear error handling
+- [x] Option to clear token from settings
+
+---
+
+## Feature 2: Product List with Frequency
+
+### User Story
+As a user, I want to see a list of products I've purchased with their frequency and last purchase date, so that I know what I buy regularly.
+
+### Requirements
+
+**Functional Requirements**
+- Display list of products
+- Show frequency (number of times purchased)
+- Show last purchase date
+- Sort products by frequency (default)
+- Store data in JSON file
+- Allow manual refresh
+
+**Non-Functional Requirements**
+- List should load instantly from local file
+- Support for 1000+ products
+- Smooth scrolling
+
+### UI Screen
+
+**Product List Screen**
 ```
 ┌─────────────────────────────────┐
-│  ← Order #ORD-2024-001          │
+│  Products      [Refresh] [Cart] │
 ├─────────────────────────────────┤
-│  Date: Oct 20, 2024 15:30       │
-│  Store: SuperMarket Downtown    │
-│  Status: Completed              │
-│  Total: €125.50                 │
-├─────────────────────────────────┤
-│  Items (15)                     │
 │                                 │
 │  Milk 1L                        │
-│  2x €1.99 = €3.98               │
-│  Dairy • Local Farm             │
+│  Frequency: 24 • 3 days ago     │
+│  ────────────────────────────   │
 │                                 │
 │  Bread                          │
-│  1x €2.50 = €2.50               │
-│  Bakery • House Brand           │
+│  Frequency: 20 • 1 day ago      │
+│  ────────────────────────────   │
+│                                 │
+│  Eggs (12 pack)                 │
+│  Frequency: 12 • 10 days ago    │
+│  ────────────────────────────   │
 │                                 │
 │  ...                            │
 │                                 │
 └─────────────────────────────────┘
 ```
 
-### Data Requirements
-
-**Order Information**
-- Order ID and number
-- Date and time
-- Total amount and currency
-- Status
-- Store information
-- List of items
-
-**Order Item Information**
-- Product name
-- Quantity and unit
-- Price per unit
-- Total price
-- Category and brand
-
 ### Acceptance Criteria
 
-- [ ] Orders displayed in reverse chronological order
-- [ ] Each order shows date, total, and item count
-- [ ] Pull-to-refresh updates order list
-- [ ] Pagination loads more orders
-- [ ] Tap order opens detail view
-- [ ] Order details show all items
-- [ ] Offline access to cached orders
-- [ ] Loading states properly displayed
-- [ ] Empty state when no orders
-- [ ] Error states handled gracefully
+- [x] Products displayed with name
+- [x] Frequency count shown
+- [x] Last purchase date shown
+- [x] Sorted by frequency (highest first)
+- [x] Data loaded from JSON file
+- [x] Empty state when no products
+- [x] Refresh button to process orders
 
 ---
 
-## Feature 3: Product Statistics
+## Feature 3: Order Processing
 
 ### User Story
-As a user, I want to see statistics about my purchases, so that I can understand my shopping patterns and make informed decisions.
+As a user, I want to refresh my product list by processing my orders, so that my frequency data stays up to date.
 
 ### Requirements
 
 **Functional Requirements**
-- Calculate purchase frequency for each product
-- Track last purchase date
-- Show average quantity per order
-- Display total quantity purchased
-- Calculate average price paid
-- Estimate purchase interval
-- Categorize products by frequency
-- Sort and filter statistics
+- Download orders one by one from API
+- Extract products from each order
+- Update product frequency and last purchase date
+- Track which orders have been processed
+- Show progress (current/total)
+- Allow cancellation at any time
+- Save progress after each order
 
 **Non-Functional Requirements**
-- Statistics calculation within 5 seconds
-- Support for 1000+ unique products
-- Update statistics in background
-- Cache calculated statistics
+- Process orders sequentially (one at a time)
+- Update UI with progress
+- Handle network errors gracefully
+- Preserve partial progress on cancellation
 
 ### User Flow
 
 ```
-1. User navigates to Statistics tab
-2. App calculates product statistics
-3. App displays product list with stats
-4. User can sort by frequency/date/name
-5. User can filter by category
-6. User taps product for details
-7. App shows detailed statistics
+1. User taps "Refresh" button
+2. App shows processing dialog
+3. App fetches list of order IDs
+4. App filters out processed orders
+5. For each unprocessed order:
+   a. Show progress: "Processing order 5 of 20"
+   b. Download order details
+   c. Extract products
+   d. Update frequencies and dates
+   e. Save products.json
+   f. Mark order as processed
+   g. Save processed_orders.json
+   h. Update progress display
+6. Show completion message
 ```
 
-### UI Screens
+### UI Screen
 
-**Statistics List Screen**
+**Processing Dialog**
 ```
 ┌─────────────────────────────────┐
-│  Statistics      🔽 Sort ⚙️ Filter│
+│  Processing Orders              │
 ├─────────────────────────────────┤
 │                                 │
-│  🔥 ESSENTIAL                   │
+│  [Progress Bar]                 │
 │                                 │
-│  Milk 1L                        │
-│  Purchased 24 times             │
-│  Last: 3 days ago               │
-│  Avg: Every 5 days              │
-│  ⭐⭐⭐⭐⭐                        │
+│  Processing order 5 of 20       │
+│  Order ID: order_456            │
 │                                 │
-│  Bread                          │
-│  Purchased 20 times             │
-│  Last: 1 day ago                │
-│  Avg: Every 4 days              │
-│  ⭐⭐⭐⭐⭐                        │
-│                                 │
-│  📊 REGULAR                     │
-│                                 │
-│  Eggs                           │
-│  Purchased 12 times             │
-│  Last: 10 days ago              │
-│  Avg: Every 14 days             │
-│  ⭐⭐⭐⭐                          │
+│  [Cancel]                       │
 │                                 │
 └─────────────────────────────────┘
 ```
 
-**Product Statistics Detail Screen**
+**Completion Dialog**
 ```
 ┌─────────────────────────────────┐
-│  ← Milk 1L                      │
+│  Processing Complete            │
 ├─────────────────────────────────┤
-│  📊 Purchase Statistics         │
 │                                 │
-│  Total Purchases: 24            │
-│  Total Quantity: 48 liters      │
-│  Avg Quantity: 2 per order      │
+│  ✓ Processed 20 orders          │
+│  ✓ Updated 150 products         │
 │                                 │
-│  First Purchased: 6 months ago  │
-│  Last Purchased: 3 days ago     │
-│  Purchase Interval: Every 5 days│
-│                                 │
-│  💰 Price Statistics            │
-│                                 │
-│  Average Price: €1.99           │
-│  Lowest Price: €1.79            │
-│  Highest Price: €2.19           │
-│                                 │
-│  📦 Product Info                │
-│                                 │
-│  Category: Dairy                │
-│  Brand: Local Farm              │
-│  Unit: liter                    │
-│                                 │
-│  🎯 Recommendation: ESSENTIAL   │
-│  "You buy this very regularly"  │
+│  [OK]                           │
 │                                 │
 └─────────────────────────────────┘
 ```
 
-### Statistics Calculations
-
-**Purchase Frequency**
-```
-frequency = total_number_of_purchases
-```
-
-**Purchase Interval**
-```
-interval_days = (last_purchase_date - first_purchase_date) / (frequency - 1)
-```
-
-**Average Quantity per Order**
-```
-avg_quantity = total_quantity_purchased / frequency
-```
-
-**Frequency Score (0.0 to 1.0)**
-```
-// Normalize based on maximum frequency
-frequency_score = product_frequency / max_product_frequency
-```
-
-**Recommendation Level**
-```
-if frequency_score >= 0.7 → ESSENTIAL
-if frequency_score >= 0.4 → REGULAR
-if frequency_score >= 0.2 → OCCASIONAL
-else → RARE
-```
-
-### Sorting Options
-
-- **Frequency (High to Low)**: Most purchased first
-- **Frequency (Low to High)**: Least purchased first
-- **Last Purchase (Recent)**: Recently bought first
-- **Last Purchase (Oldest)**: Longest time since purchase
-- **Name (A-Z)**: Alphabetical
-- **Category**: Grouped by category
-
-### Filtering Options
-
-- **By Category**: Dairy, Bakery, Produce, etc.
-- **By Recommendation Level**: Essential, Regular, Occasional, Rare
-- **By Date Range**: Products bought within specific period
-- **By Frequency**: Minimum purchase count
-
-### Acceptance Criteria
-
-- [ ] Statistics calculated from order history
-- [ ] Each product shows frequency and last purchase
-- [ ] Purchase interval displayed when applicable
-- [ ] Products sorted by frequency by default
-- [ ] User can change sort order
-- [ ] User can filter by category
-- [ ] Tap product shows detailed statistics
-- [ ] Recommendation levels displayed correctly
-- [ ] Empty state when no purchase history
-- [ ] Statistics update after new orders sync
-
----
-
-## Feature 4: Shopping Cart Builder
-
-### User Story
-As a user, I want to automatically create a shopping cart based on my purchase patterns, so that I can quickly order my regular items without manual selection.
-
-### Requirements
-
-**Functional Requirements**
-- Auto-generate cart from statistics
-- Include essential and regular items
-- Calculate suggested quantities
-- Allow manual editing of cart
-- Add/remove items manually
-- Adjust quantities
-- Submit cart to API
-- Show cart submission status
-- Save draft carts
-
-**Non-Functional Requirements**
-- Cart generation within 3 seconds
-- Support for 100+ items in cart
-- Optimistic UI updates
-- Retry failed submissions
-
-### User Flow
-
-```
-1. User navigates to Shopping Cart tab
-2. User taps "Generate Cart" button
-3. App analyzes purchase patterns
-4. App creates cart with recommended items
-5. App displays cart for review
-6. User reviews and edits cart
-7. User taps "Submit Cart" button
-8. App submits cart to API
-9. App shows confirmation
-```
-
-### UI Screens
-
-**Cart Builder Screen (Empty)**
+**Cancelled Dialog**
 ```
 ┌─────────────────────────────────┐
-│  Shopping Cart                  │
+│  Processing Cancelled           │
 ├─────────────────────────────────┤
 │                                 │
+│  ℹ Processed 12 of 20 orders    │
+│  ℹ Progress has been saved      │
 │                                 │
-│           🛒                    │
-│                                 │
-│     No items in cart            │
-│                                 │
-│  [🤖 Generate Smart Cart]       │
-│  [➕ Add Items Manually]        │
-│                                 │
+│  [OK]                           │
 │                                 │
 └─────────────────────────────────┘
 ```
 
-**Cart Builder Screen (With Items)**
-```
-┌─────────────────────────────────┐
-│  Shopping Cart      🤖 Regenerate│
-├─────────────────────────────────┤
-│  15 items • Est. €125.50        │
-│                                 │
-│  🔥 Essential Items (5)         │
-│                                 │
-│  ☑ Milk 1L                      │
-│     [- 2 +]  €3.98  🗑️         │
-│     Last bought 3 days ago      │
-│                                 │
-│  ☑ Bread                        │
-│     [- 1 +]  €2.50  🗑️         │
-│     Last bought 1 day ago       │
-│                                 │
-│  📊 Regular Items (10)          │
-│                                 │
-│  ☑ Eggs (12 pack)               │
-│     [- 1 +]  €4.50  🗑️         │
-│     Last bought 10 days ago     │
-│                                 │
-│  ...                            │
-│                                 │
-│  [➕ Add More Items]            │
-│                                 │
-│  [📤 Submit Cart]               │
-│                                 │
-└─────────────────────────────────┘
-```
+### Processing Logic
 
-**Cart Submission Screen**
-```
-┌─────────────────────────────────┐
-│  ← Cart Submitted               │
-├─────────────────────────────────┤
-│                                 │
-│           ✅                     │
-│                                 │
-│  Cart Successfully Submitted!   │
-│                                 │
-│  Cart ID: #CART-2024-001        │
-│  15 items • €125.50             │
-│                                 │
-│  Your order is being processed  │
-│  by the supermarket.            │
-│                                 │
-│  [View Cart Status]             │
-│  [Create New Cart]              │
-│                                 │
-└─────────────────────────────────┘
-```
-
-### Cart Generation Algorithm
-
-**Step 1: Select Products**
+**Update Product Frequency**
 ```kotlin
-fun selectProductsForCart(
-    statistics: List<ProductStatistics>
-): List<Product> {
-    val products = mutableListOf<Product>()
-    
-    // Add all essential products (high frequency)
-    products.addAll(
-        statistics.filter { it.recommendationLevel == ESSENTIAL }
-            .map { it.product }
-    )
-    
-    // Add regular products if last purchase was > interval
-    val regularProducts = statistics.filter { 
-        it.recommendationLevel == REGULAR &&
-        daysSinceLastPurchase(it) > it.purchaseIntervalDays
+// If product exists: increment frequency, update last purchase
+// If product is new: create entry with frequency=1
+
+when {
+    product exists -> {
+        frequency = existing.frequency + 1
+        lastPurchase = max(existing.lastPurchase, orderDate)
     }
-    products.addAll(regularProducts.map { it.product })
-    
-    return products
+    product is new -> {
+        frequency = 1
+        lastPurchase = orderDate
+    }
 }
 ```
-
-**Step 2: Calculate Quantities**
-```kotlin
-fun calculateQuantity(statistics: ProductStatistics): Int {
-    // Use average quantity, rounded up
-    return ceil(statistics.averageQuantityPerOrder).toInt()
-        .coerceAtLeast(1)
-}
-```
-
-**Step 3: Estimate Prices**
-```kotlin
-fun estimatePrice(product: Product, quantity: Int): Double {
-    val price = product.currentPrice ?: product.averagePrice
-    return price * quantity
-}
-```
-
-### Manual Editing Features
-
-**Add Item**
-- Search products from order history
-- Select product
-- Set quantity
-- Add to cart
-
-**Remove Item**
-- Tap delete icon
-- Confirm deletion
-- Update totals
-
-**Adjust Quantity**
-- Use +/- buttons
-- Enter quantity manually
-- Update item total
-- Update cart total
-
-**Toggle Selection**
-- Check/uncheck item
-- Keep in cart but exclude from submission
-- Visual indication of excluded items
-
-### Cart Validation
-
-**Before Submission**
-- At least one item selected
-- All quantities > 0
-- All products valid
-- User has network connection
 
 ### Acceptance Criteria
 
-- [ ] Generate cart button creates smart cart
-- [ ] Cart includes essential products
-- [ ] Cart includes regular products due for purchase
-- [ ] Suggested quantities based on history
-- [ ] User can add items manually
-- [ ] User can remove items
-- [ ] User can adjust quantities
-- [ ] User can toggle item selection
-- [ ] Cart shows estimated total
-- [ ] Submit cart sends to API
-- [ ] Success confirmation displayed
-- [ ] Failed submission allows retry
-- [ ] Draft carts can be saved
-- [ ] Cart persists across app restarts
+- [x] Refresh button initiates processing
+- [x] Orders downloaded sequentially
+- [x] Progress shown with count (X of Y)
+- [x] Current order ID displayed
+- [x] Cancel button stops processing
+- [x] Partial progress saved on cancel
+- [x] Products.json updated after each order
+- [x] Processed orders tracked to avoid duplicates
+- [x] Error handling for failed orders (skip and continue)
+- [x] Completion message shown
+- [x] Product list updated after processing
 
 ---
 
-## Feature 5: Data Synchronization
+## Feature 4: Shopping Cart Creation
 
 ### User Story
-As a user, I want my order history to stay up-to-date automatically, so that I always have the latest information.
+As a user, I want to create a shopping cart based on my frequently purchased items, so that I can quickly order my regular products.
 
 ### Requirements
 
 **Functional Requirements**
-- Sync orders on app launch
-- Sync orders on pull-to-refresh
-- Background sync (optional)
-- Incremental sync (only new orders)
-- Conflict resolution
-- Sync status indication
+- Automatically select products based on frequency
+- Allow manual editing of cart
+- Submit cart to API
+- Show success/error message
 
 **Non-Functional Requirements**
-- Sync completes within 10 seconds for 100 orders
-- Minimal battery impact
-- Minimal data usage
-- Works on poor network
+- Cart generation within 1 second
+- Support for 50+ items in cart
+- Clear feedback on submission
 
-### Sync Strategy
+### User Flow
 
-**Initial Sync**
-- Fetch all orders from API
-- Store in local database
-- Calculate statistics
+```
+1. User taps "Cart" button
+2. App generates cart from top products
+3. App shows cart preview
+4. User can review items
+5. User taps "Submit Cart"
+6. App sends cart to API
+7. App shows success message
+```
 
-**Incremental Sync**
-- Fetch orders since last sync
-- Merge with local data
-- Update statistics
+### UI Screen
 
-**Conflict Resolution**
-- Server data always wins
-- Local changes overwritten
-- No local modifications expected for orders
+**Cart Preview Screen**
+```
+┌─────────────────────────────────┐
+│  Shopping Cart    [Submit]      │
+├─────────────────────────────────┤
+│                                 │
+│  Auto-selected items (15):      │
+│                                 │
+│  ☑ Milk 1L          x2          │
+│  ☑ Bread            x1          │
+│  ☑ Eggs (12 pack)   x1          │
+│  ☑ Coffee 250g      x1          │
+│  ☑ Butter           x1          │
+│  ...                            │
+│                                 │
+│  Based on your purchase         │
+│  frequency                      │
+│                                 │
+└─────────────────────────────────┘
+```
+
+**Submitting Dialog**
+```
+┌─────────────────────────────────┐
+│  Submitting Cart...             │
+├─────────────────────────────────┤
+│                                 │
+│  [Progress Spinner]             │
+│                                 │
+└─────────────────────────────────┘
+```
+
+**Success Dialog**
+```
+┌─────────────────────────────────┐
+│  Cart Submitted                 │
+├─────────────────────────────────┤
+│                                 │
+│  ✓ Cart created successfully    │
+│  Cart ID: cart_789              │
+│                                 │
+│  [OK]                           │
+│                                 │
+└─────────────────────────────────┘
+```
+
+### Cart Generation Logic
+
+**Selection Criteria**
+```kotlin
+// Select products with highest frequency
+// Take top 20 or products with frequency >= threshold
+
+val topProducts = products
+    .sortedByDescending { it.frequency }
+    .take(20)
+
+// Suggested quantity: 1 or 2 based on frequency
+val quantity = when {
+    product.frequency >= 20 -> 2
+    else -> 1
+}
+```
 
 ### Acceptance Criteria
 
-- [ ] Orders sync on app launch
-- [ ] Pull-to-refresh triggers sync
-- [ ] Only new orders fetched incrementally
-- [ ] Sync status shown to user
-- [ ] Failed sync can be retried
-- [ ] Works with poor network connection
-- [ ] Minimal battery drain
-- [ ] Statistics updated after sync
+- [x] Cart generated from frequent products
+- [x] Top products selected automatically
+- [x] Cart shown for review
+- [x] Submit button sends cart to API
+- [x] Success message displayed
+- [x] Error message on failure
+- [x] Option to retry on error
 
 ---
 
@@ -608,144 +360,150 @@ As a user, I want my order history to stay up-to-date automatically, so that I a
 
 ### Navigation
 
-**Bottom Navigation Bar**
+Simple screen transitions:
 ```
-┌─────────────────────────────────┐
-│  📋 Orders  │  📊 Stats  │  🛒 Cart │
-└─────────────────────────────────┘
+Token Input → Product List → Cart Preview
+                ↓
+           Order Processing
 ```
 
 ### Loading States
 
-**Shimmer Loading**
-- Used for list items
-- Shows expected layout
-- Animated shimmer effect
-
-**Spinner Loading**
-- Used for actions
+**Shimmer/Spinner**
+- Show during API calls
 - Centered on screen
 - With descriptive text
 
 ### Empty States
 
-**No Orders**
-- Icon: 📭
-- Title: "No Orders Yet"
-- Message: "Your order history will appear here"
+**No Products**
+- Message: "No products yet"
+- Action: "Refresh to process orders"
 
-**No Statistics**
-- Icon: 📊
-- Title: "No Statistics Available"
-- Message: "Purchase some items to see statistics"
-
-**Empty Cart**
-- Icon: 🛒
-- Title: "Cart is Empty"
-- Message: "Generate a smart cart or add items manually"
+**No Token**
+- Message: "No API token"
+- Action: "Enter token to continue"
 
 ### Error States
 
 **Network Error**
 - Icon: 📡
-- Title: "No Internet Connection"
-- Message: "Please check your connection"
+- Title: "Connection Error"
+- Message: "Please check your internet connection"
 - Button: "Retry"
 
-**Server Error**
+**API Error**
 - Icon: ⚠️
-- Title: "Something Went Wrong"
-- Message: "Please try again later"
-- Button: "Retry"
+- Title: "Error"
+- Message: [API error message]
+- Button: "OK"
 
-**Authentication Error**
-- Icon: 🔒
-- Title: "Session Expired"
-- Message: "Please login again"
-- Button: "Login"
+**Token Invalid**
+- Icon: 🔑
+- Title: "Invalid Token"
+- Message: "Please enter a valid API token"
+- Button: "OK"
 
 ---
 
 ## Non-Functional Requirements
 
 ### Performance
-- App launch: < 2 seconds
-- Screen navigation: < 500ms
+- Product list load: < 1 second (from file)
+- Cart generation: < 1 second
+- Order processing: 1-2 seconds per order
 - API calls: < 3 seconds
-- Statistics calculation: < 5 seconds
-- Cart generation: < 3 seconds
 
-### Accessibility
-- Support TalkBack
-- Minimum touch target: 48dp
-- Color contrast ratio: 4.5:1
-- Proper content descriptions
+### Usability
+- Simple, clear interface
+- No animations (keeping it simple)
+- Clear feedback for all actions
+- Progress indicators for long operations
+- Cancellable operations
 
-### Localization
-- Support for multiple languages (future)
-- Date/time formatting
-- Currency formatting
-- Number formatting
+### Reliability
+- Persist data after each order processed
+- Handle network interruptions
+- Skip problematic orders
+- Save partial progress on cancellation
 
 ### Security
-- Encrypted token storage
-- HTTPS only
+- Token stored encrypted
 - No sensitive data in logs
-- Secure data handling
+- HTTPS for all API calls
 
-### Compatibility
-- Android 14 (API 34) minimum
-- No backward compatibility needed
-- Support different screen sizes
-- Support portrait and landscape
+---
+
+## User Scenarios
+
+### Scenario 1: First Time User
+
+1. Open app
+2. See token input screen
+3. Paste API token
+4. Submit token
+5. See empty product list
+6. Tap "Refresh"
+7. Watch orders being processed
+8. See product list populated
+9. Tap "Cart"
+10. Review and submit cart
+
+### Scenario 2: Returning User
+
+1. Open app
+2. Immediately see product list (token stored)
+3. View frequencies and dates
+4. Optionally tap "Refresh" for updates
+5. Create and submit cart
+
+### Scenario 3: Cancelled Processing
+
+1. Tap "Refresh"
+2. Processing starts (20 orders)
+3. User taps "Cancel" after 12 orders
+4. Processing stops
+5. Progress saved (12 orders processed)
+6. Product list shows updated frequencies
+7. Next refresh will process remaining 8 orders
 
 ---
 
 ## Success Metrics
 
 ### User Engagement
-- Daily active users
-- Session duration
-- Feature usage rates
-- Cart generation usage
-- Cart submission rate
+- Daily product list views
+- Refresh frequency
+- Cart submissions
 
-### Performance Metrics
+### Performance
+- Processing speed per order
+- API success rate
 - App crash rate < 1%
-- API success rate > 99%
-- Average response time < 3s
-- App load time < 2s
 
-### Business Metrics
-- User retention rate
-- Cart submission rate
-- Average items per cart
-- Time to create cart
+### Data Quality
+- Number of products tracked
+- Order processing success rate
+- Duplicate order avoidance
 
 ---
 
 ## Future Enhancements
 
 ### Phase 2
-- Product recommendations
-- Price alerts
-- Shopping lists
-- Meal planning integration
+- Product categories view
+- Search products
+- Manual product editing
+- Export product list
 
 ### Phase 3
-- Family account sharing
-- Budget tracking
-- Nutritional analysis
-- Recipe suggestions
-
-### Phase 4
-- Voice commands
-- Widgets
-- Wear OS support
-- Push notifications
+- Multiple shopping lists
+- Product recommendations
+- Price tracking
+- Budget monitoring
 
 ---
 
 ## Conclusion
 
-These feature specifications provide a complete blueprint for implementing the LaComprago application, ensuring all requirements are clearly defined, measurable, and achievable.
+These simplified feature specifications provide a clear, achievable implementation plan for LaCompraGo, focusing on essential functionality with minimal complexity.

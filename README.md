@@ -1,17 +1,16 @@
-# LaComprago
+# LaCompraGo
 
 Automated shopping cart builder for Android
 
 ## Overview
 
-LaComprago is an Android application that helps users automate their shopping experience by analyzing past purchase history and creating intelligent shopping carts based on purchase frequency and patterns.
+LaCompraGo is a simple Android application that helps users automate their shopping experience by analyzing past purchase history and creating intelligent shopping carts based on purchase frequency and patterns.
 
 ## Features
 
-- **OAuth Authentication**: Secure login using OAuth tokens
-- **Order History**: Download and view past orders from supermarket API
-- **Statistical Analysis**: Analyze purchase patterns and product frequency
-- **Product Tracking**: Track how often products are purchased and when they were last bought
+- **Token Authentication**: Simple token input for API access
+- **Order Processing**: Download and process past orders one by one
+- **Product Frequency Analysis**: Track how often products are purchased and when they were last bought
 - **Smart Shopping Cart**: Automatically create shopping carts based on purchase history
 
 ## Technical Details
@@ -19,8 +18,10 @@ LaComprago is an Android application that helps users automate their shopping ex
 - **Platform**: Android
 - **Target SDK**: Android 14 (API Level 34)
 - **Language**: Kotlin
-- **Architecture**: MVVM (Model-View-ViewModel)
+- **Architecture**: Simple MVVM pattern
 - **Minimum SDK**: Android 14 (No backward compatibility)
+- **Storage**: JSON files for local data
+- **Dependencies**: Minimal (only essential libraries)
 
 ## Project Structure
 
@@ -55,8 +56,8 @@ See the [doc](./doc/) folder for detailed architecture and design documentation:
 
 1. Clone the repository
 2. Open the project in Android Studio
-3. Sync Gradle dependencies
-4. Configure OAuth credentials (details in authentication documentation)
+3. Sync Gradle dependencies (minimal dependencies)
+4. Input your API token in the app
 5. Build and run the application
 
 ## Development Status
