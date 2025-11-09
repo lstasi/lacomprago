@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LaCompraGo</string>
+    
+    <!-- Token Screen -->
+    <string name="token_input_hint">Enter your API token</string>
+    <string name="token_validate">Validate Token</string>
+    <string name="token_invalid">Invalid token. Please try again.</string>
+    <string name="token_valid">Token validated successfully</string>
+    
+    <!-- Product List Screen -->
+    <string name="products_title">Products</string>
+    <string name="refresh_products">Refresh Products</string>
+    <string name="create_cart">Create Shopping Cart</string>
+    <string name="empty_products">No products yet. Refresh to process orders.</string>
+    
+    <!-- Order Processing -->
+    <string name="processing_orders">Processing Orders</string>
+    <string name="cancel">Cancel</string>
+    <string name="processing_status">Processing order %1$d of %2$d</string>
+    <string name="processing_complete">Processing complete. %1$d orders processed.</string>
+    <string name="processing_cancelled">Processing cancelled. %1$d orders processed.</string>
+    
+    <!-- Cart -->
+    <string name="cart_title">Shopping Cart</string>
+    <string name="submit_cart">Submit Cart</string>
+    <string name="cart_success">Cart created successfully</string>
+    <string name="cart_error">Error creating cart</string>
+    
+    <!-- Errors -->
+    <string name="error_network">Network error. Please check your connection.</string>
+    <string name="error_unknown">An unknown error occurred</string>
+</resources>
