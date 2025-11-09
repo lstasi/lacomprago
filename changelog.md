@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (Phase 2: Project Setup)
+- Android project structure with Kotlin
+- Gradle build configuration with Android Gradle Plugin 8.5.2
+- All minimal dependencies (AndroidX, Lifecycle, OkHttp, Gson, Security Crypto)
+- Android 14 (API 34) target configuration
+- MainActivity as entry point
+- Basic UI resources (layouts, strings, colors, themes)
+- ProGuard rules for production builds
+- Example unit and instrumented tests
+- Gradle wrapper 8.11.1
+- BUILD_NOTES.md documentation for setup and build instructions
+
 ### Changed
 - Simplified architecture to use minimal dependencies
 - Changed from OAuth to simple token-based authentication
