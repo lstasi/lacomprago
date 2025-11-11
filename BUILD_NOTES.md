@@ -51,6 +51,8 @@ lacomprago/
 - Target SDK: Android 14 (API 34)
 - Min SDK: Android 14 (API 34)
 - Compile SDK: 34
+- BuildConfig generation enabled
+- API URL configuration via BuildConfig
 - All required dependencies configured:
   - AndroidX Core, AppCompat, Material Design
   - ConstraintLayout
@@ -69,27 +71,35 @@ lacomprago/
 - AndroidX enabled
 - Build optimizations enabled
 - JVM args configured
+- API Base URL configuration (API_BASE_URL)
 
-### 3. Android Manifest ✅
+### 3. API Configuration ✅
+- API Base URL configured in gradle.properties
+- BuildConfig field for API_BASE_URL
+- ApiConfig object for centralized API settings
+- Timeout configurations (connect, read, write)
+
+### 4. Android Manifest ✅
 - Package: `com.lacomprago`
 - Internet permission added
 - Target SDK 34
 - MainActivity configured as launcher activity
 - Application theme configured
 
-### 4. Basic UI Components ✅
+### 5. Basic UI Components ✅
 - MainActivity.kt: Entry point activity
 - activity_main.xml: Main layout with ConstraintLayout
 - Resource files: strings, colors, themes
 - Launcher icon drawables
 
-### 5. Build Configuration ✅
+### 6. Build Configuration ✅
 - ProGuard rules configured for release builds
 - Debug and Release build variants
 - View binding enabled
+- BuildConfig generation enabled
 - Kotlin JVM target: 17
 
-### 6. Gradle Wrapper ✅
+### 7. Gradle Wrapper ✅
 - Version: 8.11.1
 - Distribution type: all
 - Wrapper scripts for Unix and Windows
@@ -199,6 +209,54 @@ All dependencies from the architecture document have been included:
 | com.squareup.okhttp3:okhttp | 4.12.0 | HTTP client |
 | com.google.code.gson:gson | 2.11.0 | JSON serialization |
 | androidx.security:security-crypto | 1.1.0-alpha06 | Encrypted SharedPreferences |
+
+## API Configuration
+
+The API base URL is configured and accessible throughout the application:
+
+### Configuration Files
+
+**gradle.properties:**
+```properties
+API_BASE_URL=https://api.supermarket.example.com/
+```
+
+**app/build.gradle.kts:**
+```kotlin
+buildConfigField("String", "API_BASE_URL", "\"${project.findProperty("API_BASE_URL") ?: "https://api.supermarket.example.com/"}\"")
+```
+
+### Usage in Code
+
+The API configuration is available via the `ApiConfig` object:
+
+```kotlin
+import com.lacomprago.data.api.ApiConfig
+
+// Access the base URL
+val baseUrl = ApiConfig.BASE_URL
+
+// Access timeout settings
+val connectTimeout = ApiConfig.CONNECT_TIMEOUT
+val readTimeout = ApiConfig.READ_TIMEOUT
+val writeTimeout = ApiConfig.WRITE_TIMEOUT
+```
+
+### Changing the API URL
+
+To use a different API endpoint (e.g., for testing or production):
+
+1. **Edit gradle.properties:**
+   ```properties
+   API_BASE_URL=https://your-api-endpoint.com/
+   ```
+
+2. **Rebuild the project:**
+   ```bash
+   ./gradlew clean build
+   ```
+
+The new URL will be compiled into BuildConfig and available throughout the app.
 
 ## Notes
 
