@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Updated Android Gradle Plugin from 8.5.2 to 8.7.3 for better Android 34 support
+- Removed deprecated uses-sdk from AndroidManifest.xml (SDK versions managed in build.gradle.kts)
+
 ### Added (Phase 2: Project Setup)
 - Android project structure with Kotlin
-- Gradle build configuration with Android Gradle Plugin 8.5.2
+- Gradle build configuration with Android Gradle Plugin 8.7.3
 - All minimal dependencies (AndroidX, Lifecycle, OkHttp, Gson, Security Crypto)
 - Android 14 (API 34) target configuration
 - MainActivity as entry point

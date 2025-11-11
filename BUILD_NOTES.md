@@ -43,7 +43,7 @@ lacomprago/
 ### 2. Gradle Configuration ✅
 
 **Root build.gradle.kts:**
-- Android Gradle Plugin 8.5.2
+- Android Gradle Plugin 8.7.3
 - Kotlin Plugin 2.0.21
 - Buildscript configuration for dependency management
 
