@@ -1,0 +1,37 @@
+version: 2
+updates:
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    
+  # Gradle dependencies
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    ignore:
+      # Keep Android SDK at version 34 (Android 14) as per project requirements
+      - dependency-name: "com.android.tools.build:gradle"
+        update-types: ["version-update:semver-major"]
+      # Keep compileSdk at 34
+      - dependency-name: "android"
+        update-types: ["version-update:semver-major"]
+      # Keep core-ktx compatible with Android 34
+      - dependency-name: "androidx.core:core-ktx"
+        versions: [">1.15.x"]
+      # Keep lifecycle libraries compatible with Android 34
+      - dependency-name: "androidx.lifecycle:*"
+        versions: [">2.8.x"]
+      # Keep appcompat compatible with Android 34
+      - dependency-name: "androidx.appcompat:appcompat"
+        versions: [">1.7.x"]
+      # Keep material design compatible with Android 34
+      - dependency-name: "com.google.android.material:material"
+        versions: [">1.12.x"]
+    labels:
+      - "dependencies"
+      - "android"

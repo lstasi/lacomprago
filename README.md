@@ -60,6 +60,27 @@ See the [doc](./doc/) folder for detailed architecture and design documentation:
 4. Input your API token in the app
 5. Build and run the application
 
+## CI/CD & Releases
+
+This project uses GitHub Actions for continuous integration and automated releases:
+
+- **Automated Builds**: Every push triggers building of debug and release APKs
+- **Testing**: Automated unit tests and lint checks
+- **Releases**: Tagged releases automatically create GitHub releases with installable APKs
+- **Dependabot**: Automatic dependency updates with Android 34 compatibility maintained
+
+See [.github/README.md](./.github/README.md) for detailed CI/CD documentation.
+
+### Installing APKs
+
+Download APKs from:
+- **GitHub Actions**: Actions tab → Select workflow run → Download artifacts
+- **Releases**: Releases page → Download APK from any release
+
+Requirements:
+- Android 14 (API Level 34) or higher
+- Enable "Install from unknown sources" for installation
+
 ## Development Status
 
 This project is currently in the design phase. Architecture and documentation are being created before implementation begins.
