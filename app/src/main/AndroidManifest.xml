@@ -4,9 +4,6 @@
     <!-- Internet permission for API calls -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- Target Android 14+ only -->
-    <uses-sdk android:minSdkVersion="34" android:targetSdkVersion="34" />
-
     <application
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
