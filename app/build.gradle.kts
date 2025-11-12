@@ -63,7 +63,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // JSON
-    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("com.google.code.gson:gson:2.13.2")
 
     // Security
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
