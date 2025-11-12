@@ -23,7 +23,6 @@ Release workflow for creating GitHub releases with APK files.
 
 **Triggers:**
 - Push tags matching `v*.*.*` (e.g., v1.0.0)
-- Push tags matching `phase-*` (e.g., phase-3, phase-4)
 - Manual workflow dispatch with custom version tag
 
 **Outputs:**
@@ -32,10 +31,6 @@ Release workflow for creating GitHub releases with APK files.
 
 **Usage:**
 ```bash
-# Create a phase release
-git tag phase-3 -m "Phase 3: Token Authentication Complete"
-git push origin phase-3
-
 # Create a version release
 git tag v1.0.0 -m "Version 1.0.0"
 git push origin v1.0.0
