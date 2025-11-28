@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (Phase 3: Token Authentication)
+- Token input UI screen with Material Design components
+- TokenStorage class with EncryptedSharedPreferences for secure token storage
+- TokenValidator class for basic token format validation
+- AuthState sealed class for authentication state management
+- AuthViewModel for managing authentication flow
+- Token clear functionality
+- Unit tests for TokenValidator
+
 ### Changed
 - Updated Android Gradle Plugin from 8.5.2 to 8.7.3 for better Android 34 support
 - Removed deprecated uses-sdk from AndroidManifest.xml (SDK versions managed in build.gradle.kts)
+- Updated MainActivity to handle token input and validation with view binding
 
 ### Added (Phase 2: Project Setup)
 - Android project structure with Kotlin
