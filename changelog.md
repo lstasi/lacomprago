@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (Phase 7: Order Processing Feature)
+- OrderProcessingState sealed class for managing order processing UI states
+- OrderProcessingViewModel for handling order processing logic
+- OrderProcessingDialogFragment for displaying processing progress
+- Sequential order download with progress tracking
+- Product frequency and last purchase date updates from orders
+- Cancellation support with partial progress saving
+- Error handling that skips failed orders and continues processing
+- Integration with ProductListActivity refresh button
+- Unit tests for OrderProcessingState
+
 ### Added (Phase 5: API Integration)
 - ApiClient class with OkHttp for HTTP communication
 - TokenInterceptor for automatic token attachment to requests

@@ -22,9 +22,14 @@
     <!-- Order Processing -->
     <string name="processing_orders">Processing Orders</string>
     <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="fetching_orders">Fetching orders…</string>
     <string name="processing_status">Processing order %1$d of %2$d</string>
-    <string name="processing_complete">Processing complete. %1$d orders processed.</string>
-    <string name="processing_cancelled">Processing cancelled. %1$d orders processed.</string>
+    <string name="order_id_format">Order ID: %1$s</string>
+    <string name="processing_complete">Processing complete!\n%1$d orders processed, %2$d products updated.</string>
+    <string name="processing_complete_none">No new orders to process.</string>
+    <string name="processing_cancelled">Processing cancelled.\n%1$d orders processed. Progress saved.</string>
+    <string name="processing_error">Error: %1$s\n%2$d orders processed before error.</string>
     
     <!-- Cart -->
     <string name="cart_title">Shopping Cart</string>
