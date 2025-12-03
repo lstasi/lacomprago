@@ -35,9 +35,10 @@ class TokenValidator {
         const val MIN_TOKEN_LENGTH = 20
         
         /**
-         * Token format: alphanumeric, dashes, and underscores
+         * Token format: alphanumeric, dashes, underscores, and periods (for JWT)
+         * JWT tokens have the format: header.payload.signature (Base64URL encoded)
          */
-        private const val TOKEN_PATTERN = "[A-Za-z0-9_-]+"
+        private const val TOKEN_PATTERN = "[A-Za-z0-9_.-]+"
     }
 }
 

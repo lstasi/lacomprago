@@ -89,4 +89,13 @@ class TokenValidatorTest {
         
         assertTrue(result is TokenValidationResult.Valid)
     }
+
+    @Test
+    fun `validate returns Valid for JWT token with periods`() {
+        // JWT tokens have the format: header.payload.signature
+        val jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        val result = validator.validate(jwtToken)
+
+        assertTrue(result is TokenValidationResult.Valid)
+    }
 }

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- TokenValidator now correctly accepts JWT tokens with periods (.) in the format header.payload.signature
+
 ### Added (Phase 3: Token Authentication)
 - Token input UI screen with Material Design components
 - TokenStorage class with EncryptedSharedPreferences for secure token storage
