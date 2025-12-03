@@ -21,6 +21,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
+        <!-- Product List Activity -->
+        <activity
+            android:name=".ui.ProductListActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
     </application>
 
 </manifest>

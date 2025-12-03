@@ -11,6 +11,7 @@
     <string name="token_clear">Clear Token</string>
     <string name="token_validating">Validating token…</string>
     <string name="token_stored">Token stored. You can now use the app.</string>
+    <string name="continue_to_products">Continue to Products</string>
     
     <!-- Product List Screen -->
     <string name="products_title">Products</string>
@@ -34,4 +35,8 @@
     <!-- Errors -->
     <string name="error_network">Network error. Please check your connection.</string>
     <string name="error_unknown">An unknown error occurred</string>
+    
+    <!-- Actions -->
+    <string name="retry">Retry</string>
+    <string name="product_count">%1$d products</string>
 </resources>
