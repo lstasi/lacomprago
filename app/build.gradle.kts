@@ -15,7 +15,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        
+
         // API Configuration
         buildConfigField("String", "API_BASE_URL", "\"${project.findProperty("API_BASE_URL") ?: "https://api.supermarket.example.com/"}\"")
     }
@@ -27,6 +27,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // CI/CD will sign the APK using r0adkll/sign-android-release action
+            // For local builds, use: ./gradlew assembleDebug
         }
         debug {
             isDebuggable = true
