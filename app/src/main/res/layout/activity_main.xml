@@ -77,6 +77,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp" />
 
+    <!-- Continue to Products Button (shown only when token is valid) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/continueButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/continue_to_products"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/clearTokenButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp" />
+
     <!-- Progress Indicator -->
     <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/progressIndicator"
@@ -84,7 +96,7 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         android:indeterminate="true"
-        app:layout_constraintTop_toBottomOf="@id/clearTokenButton"
+        app:layout_constraintTop_toBottomOf="@id/continueButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="24dp" />

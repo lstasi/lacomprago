@@ -1,5 +1,6 @@
 package com.lacomprago.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -57,6 +58,11 @@ class MainActivity : AppCompatActivity() {
                 false
             }
         }
+        
+        // Continue to products button click
+        binding.continueButton.setOnClickListener {
+            navigateToProductList()
+        }
     }
     
     private fun observeAuthState() {
@@ -76,6 +82,7 @@ class MainActivity : AppCompatActivity() {
             submitButton.isEnabled = true
             submitButton.visibility = View.VISIBLE
             clearTokenButton.visibility = View.GONE
+            continueButton.visibility = View.GONE
             progressIndicator.visibility = View.GONE
             statusText.visibility = View.GONE
             tokenInputLayout.error = null
@@ -98,6 +105,7 @@ class MainActivity : AppCompatActivity() {
             tokenInputLayout.isEnabled = false
             submitButton.visibility = View.GONE
             clearTokenButton.visibility = View.VISIBLE
+            continueButton.visibility = View.VISIBLE
             progressIndicator.visibility = View.GONE
             statusText.visibility = View.VISIBLE
             statusText.text = getString(R.string.token_stored)
@@ -114,5 +122,10 @@ class MainActivity : AppCompatActivity() {
             statusText.visibility = View.GONE
             tokenInputLayout.error = message
         }
+    }
+    
+    private fun navigateToProductList() {
+        val intent = Intent(this, ProductListActivity::class.java)
+        startActivity(intent)
     }
 }
