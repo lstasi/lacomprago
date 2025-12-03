@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (Phase 5: API Integration)
+- ApiClient class with OkHttp for HTTP communication
+- TokenInterceptor for automatic token attachment to requests
+- API endpoint implementations:
+  - validateToken() for token validation
+  - getOrderList() for fetching order summaries
+  - getOrderDetails() for fetching full order details
+  - createCart() for creating shopping carts
+- API request/response models:
+  - OrderSummary, OrderListResponse for order list
+  - OrderItemResponse, OrderResponse for order details
+  - CartItemRequest, CartRequest, CartResponse for cart operations
+  - ValidateTokenResponse for token validation
+- ApiException for API error representation
+- ApiError sealed class with error categorization and user-friendly messages
+- RetryHelper with exponential backoff for network error recovery
+- Unit tests for API models and error handling
+
 ### Fixed
 - TokenValidator now correctly accepts JWT tokens with periods (.) in the format header.payload.signature
 
