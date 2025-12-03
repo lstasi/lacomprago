@@ -65,7 +65,9 @@ class ProductAdapter : ListAdapter<Product, ProductAdapter.ProductViewHolder>(Pr
                 diffDays == 0L -> "Today"
                 diffDays == 1L -> "1 day ago"
                 diffDays < 7 -> "$diffDays days ago"
-                diffDays < 30 -> "${diffDays / 7} weeks ago"
+                diffDays < 14 -> "1 week ago"
+                diffDays < 21 -> "2 weeks ago"
+                diffDays < 28 -> "3 weeks ago"
                 else -> {
                     val dateFormat = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
                     dateFormat.format(Date(timestamp))
