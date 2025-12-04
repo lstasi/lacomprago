@@ -19,6 +19,8 @@ import com.lacomprago.viewmodel.OrderProcessingViewModel
 /**
  * Dialog fragment for displaying order processing progress.
  * Shows progress bar, status text, and allows cancellation.
+ * 
+ * Note: To avoid API rate limiting, only ONE order is processed per sync.
  */
 class OrderProcessingDialogFragment : DialogFragment() {
     
@@ -102,22 +104,27 @@ class OrderProcessingDialogFragment : DialogFragment() {
             
             is OrderProcessingState.Processing -> {
                 showProcessingState()
-                progressBar.isIndeterminate = false
-                progressBar.max = state.totalOrders
-                progressBar.progress = state.currentOrder
-                statusText.text = getString(R.string.processing_status, state.currentOrder, state.totalOrders)
+                progressBar.isIndeterminate = true
+                statusText.text = getString(R.string.processing_status)
                 orderIdText.text = getString(R.string.order_id_format, state.currentOrderId)
                 orderIdText.visibility = View.VISIBLE
             }
             
             is OrderProcessingState.Completed -> {
                 showResultState()
-                if (state.processedCount > 0) {
-                    resultMessage.text = getString(
-                        R.string.processing_complete,
-                        state.processedCount,
-                        state.updatedProductCount
-                    )
+                if (state.updatedProductCount > 0) {
+                    if (state.remainingOrders > 0) {
+                        resultMessage.text = getString(
+                            R.string.processing_complete_remaining,
+                            state.updatedProductCount,
+                            state.remainingOrders
+                        )
+                    } else {
+                        resultMessage.text = getString(
+                            R.string.processing_complete,
+                            state.updatedProductCount
+                        )
+                    }
                     resultMessage.setTextColor(resources.getColor(R.color.success_green, null))
                 } else {
                     resultMessage.text = getString(R.string.processing_complete_none)
@@ -128,20 +135,14 @@ class OrderProcessingDialogFragment : DialogFragment() {
             
             is OrderProcessingState.Cancelled -> {
                 showResultState()
-                resultMessage.text = getString(R.string.processing_cancelled, state.processedCount)
+                resultMessage.text = getString(R.string.processing_cancelled)
                 resultMessage.setTextColor(resources.getColor(R.color.text_secondary, null))
-                if (state.processedCount > 0) {
-                    onProcessingComplete?.invoke()
-                }
             }
             
             is OrderProcessingState.Error -> {
                 showResultState()
-                resultMessage.text = getString(R.string.processing_error, state.message, state.processedCount)
+                resultMessage.text = getString(R.string.processing_error, state.message)
                 resultMessage.setTextColor(resources.getColor(R.color.error_red, null))
-                if (state.processedCount > 0) {
-                    onProcessingComplete?.invoke()
-                }
             }
         }
     }

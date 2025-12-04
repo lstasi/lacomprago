@@ -6,6 +6,8 @@ import org.junit.Test
 
 /**
  * Unit tests for OrderProcessingState sealed class.
+ * 
+ * Note: To avoid API rate limiting, only ONE order is processed per sync.
  */
 class OrderProcessingStateTest {
 
@@ -26,21 +28,19 @@ class OrderProcessingStateTest {
     @Test
     fun `Processing state contains correct values`() {
         val state = OrderProcessingState.Processing(
-            currentOrder = 5,
-            totalOrders = 20,
-            currentOrderId = "order_123"
+            currentOrderId = "order_123",
+            remainingOrders = 19
         )
         
-        assertEquals(5, state.currentOrder)
-        assertEquals(20, state.totalOrders)
         assertEquals("order_123", state.currentOrderId)
+        assertEquals(19, state.remainingOrders)
     }
 
     @Test
     fun `Processing state equality works correctly`() {
-        val state1 = OrderProcessingState.Processing(5, 20, "order_123")
-        val state2 = OrderProcessingState.Processing(5, 20, "order_123")
-        val state3 = OrderProcessingState.Processing(6, 20, "order_123")
+        val state1 = OrderProcessingState.Processing("order_123", 19)
+        val state2 = OrderProcessingState.Processing("order_123", 19)
+        val state3 = OrderProcessingState.Processing("order_456", 19)
         
         assertEquals(state1, state2)
         assertNotEquals(state1, state3)
@@ -49,38 +49,34 @@ class OrderProcessingStateTest {
     @Test
     fun `Completed state contains correct values`() {
         val state = OrderProcessingState.Completed(
-            processedCount = 15,
-            updatedProductCount = 42
+            updatedProductCount = 42,
+            remainingOrders = 10
         )
         
-        assertEquals(15, state.processedCount)
         assertEquals(42, state.updatedProductCount)
+        assertEquals(10, state.remainingOrders)
     }
 
     @Test
-    fun `Completed state has default updatedProductCount of 0`() {
-        val state = OrderProcessingState.Completed(processedCount = 10)
+    fun `Completed state has default values`() {
+        val state = OrderProcessingState.Completed()
         
-        assertEquals(10, state.processedCount)
         assertEquals(0, state.updatedProductCount)
+        assertEquals(0, state.remainingOrders)
     }
 
     @Test
-    fun `Cancelled state contains correct values`() {
-        val state = OrderProcessingState.Cancelled(processedCount = 12)
-        
-        assertEquals(12, state.processedCount)
+    fun `Cancelled state is a singleton`() {
+        val state1: OrderProcessingState = OrderProcessingState.Cancelled
+        val state2: OrderProcessingState = OrderProcessingState.Cancelled
+        assertEquals(state1, state2)
     }
 
     @Test
     fun `Error state contains correct values`() {
-        val state = OrderProcessingState.Error(
-            message = "Network error",
-            processedCount = 8
-        )
+        val state = OrderProcessingState.Error(message = "Network error")
         
         assertEquals("Network error", state.message)
-        assertEquals(8, state.processedCount)
     }
 
     @Test
@@ -88,10 +84,10 @@ class OrderProcessingStateTest {
         val states: List<OrderProcessingState> = listOf(
             OrderProcessingState.Idle,
             OrderProcessingState.FetchingOrders,
-            OrderProcessingState.Processing(1, 10, "order_1"),
-            OrderProcessingState.Completed(10, 50),
-            OrderProcessingState.Cancelled(5),
-            OrderProcessingState.Error("Error message", 3)
+            OrderProcessingState.Processing("order_1", 9),
+            OrderProcessingState.Completed(50, 5),
+            OrderProcessingState.Cancelled,
+            OrderProcessingState.Error("Error message")
         )
         
         val results = states.map { state ->
@@ -110,22 +106,21 @@ class OrderProcessingStateTest {
 
     @Test
     fun `Processing state copy works correctly`() {
-        val original = OrderProcessingState.Processing(5, 20, "order_123")
-        val updated = original.copy(currentOrder = 6)
+        val original = OrderProcessingState.Processing("order_123", 19)
+        val updated = original.copy(remainingOrders = 18)
         
-        assertEquals(5, original.currentOrder)
-        assertEquals(6, updated.currentOrder)
-        assertEquals(original.totalOrders, updated.totalOrders)
+        assertEquals(19, original.remainingOrders)
+        assertEquals(18, updated.remainingOrders)
         assertEquals(original.currentOrderId, updated.currentOrderId)
     }
 
     @Test
     fun `Completed state copy works correctly`() {
-        val original = OrderProcessingState.Completed(10, 50)
-        val updated = original.copy(processedCount = 15)
+        val original = OrderProcessingState.Completed(50, 5)
+        val updated = original.copy(remainingOrders = 4)
         
-        assertEquals(10, original.processedCount)
-        assertEquals(15, updated.processedCount)
+        assertEquals(5, original.remainingOrders)
+        assertEquals(4, updated.remainingOrders)
         assertEquals(original.updatedProductCount, updated.updatedProductCount)
     }
 }

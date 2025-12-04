@@ -17,7 +17,6 @@ import com.lacomprago.storage.JsonStorageException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -27,8 +26,10 @@ import java.util.TimeZone
 
 /**
  * ViewModel for managing order processing.
- * Handles fetching orders from API, processing them sequentially,
- * updating product frequencies, and saving progress.
+ * 
+ * To avoid API rate limiting/banning, this ViewModel processes only ONE order
+ * per sync operation. Users need to press sync multiple times to process
+ * all pending orders.
  */
 class OrderProcessingViewModel(
     private val apiClient: ApiClient,
@@ -39,13 +40,11 @@ class OrderProcessingViewModel(
     val processingState: LiveData<OrderProcessingState> = _processingState
     
     private var processingJob: Job? = null
-    private var processedCount = 0
-    private var updatedProductCount = 0
     
     /**
-     * Start processing orders.
+     * Start processing a single order.
      * Fetches orders from API, filters out already processed ones,
-     * and processes each order sequentially.
+     * and processes only the FIRST unprocessed order to avoid API rate limiting.
      */
     fun startProcessing() {
         if (processingJob?.isActive == true) {
@@ -53,15 +52,12 @@ class OrderProcessingViewModel(
             return
         }
         
-        processedCount = 0
-        updatedProductCount = 0
-        
         processingJob = viewModelScope.launch {
             try {
-                processOrders()
+                processSingleOrder()
             } catch (e: CancellationException) {
                 Log.d(TAG, "Processing cancelled")
-                _processingState.value = OrderProcessingState.Cancelled(processedCount)
+                _processingState.value = OrderProcessingState.Cancelled
                 throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Error during order processing", e)
@@ -71,14 +67,13 @@ class OrderProcessingViewModel(
                     is JsonStorageException -> "Error saving data: ${e.message}"
                     else -> "An unexpected error occurred"
                 }
-                _processingState.value = OrderProcessingState.Error(errorMessage, processedCount)
+                _processingState.value = OrderProcessingState.Error(errorMessage)
             }
         }
     }
     
     /**
      * Cancel the current processing operation.
-     * Partial progress is saved.
      */
     fun cancelProcessing() {
         processingJob?.cancel()
@@ -91,7 +86,11 @@ class OrderProcessingViewModel(
         _processingState.value = OrderProcessingState.Idle
     }
     
-    private suspend fun processOrders() {
+    /**
+     * Process a single order to avoid API rate limiting.
+     * Only the first unprocessed order is fetched and processed.
+     */
+    private suspend fun processSingleOrder() {
         // Step 1: Set state to fetching orders
         _processingState.value = OrderProcessingState.FetchingOrders
         
@@ -111,50 +110,39 @@ class OrderProcessingViewModel(
         Log.d(TAG, "Found ${unprocessedOrders.size} unprocessed orders")
         
         if (unprocessedOrders.isEmpty()) {
-            _processingState.value = OrderProcessingState.Completed(0, 0)
+            _processingState.value = OrderProcessingState.Completed(
+                updatedProductCount = 0,
+                remainingOrders = 0
+            )
             return
         }
         
-        val totalOrders = unprocessedOrders.size
+        // Step 5: Process only the FIRST unprocessed order
+        val orderToProcess = unprocessedOrders.first()
+        val remainingAfterThis = unprocessedOrders.size - 1
         
-        // Step 5: Process each order sequentially
-        for ((index, orderSummary) in unprocessedOrders.withIndex()) {
-            // Check if cancelled
-            if (!viewModelScope.isActive) {
-                break
-            }
-            
-            // Update progress
-            _processingState.value = OrderProcessingState.Processing(
-                currentOrder = index + 1,
-                totalOrders = totalOrders,
-                currentOrderId = orderSummary.id
-            )
-            
-            try {
-                // Fetch order details
-                val orderDetails = apiClient.getOrderDetails(orderSummary.id)
-                
-                // Update products from order
-                val updatedCount = updateProductsFromOrder(orderDetails)
-                updatedProductCount += updatedCount
-                
-                // Mark order as processed
-                markOrderAsProcessed(orderSummary.id)
-                
-                processedCount++
-                Log.d(TAG, "Processed order ${orderSummary.id}, updated $updatedCount products")
-                
-            } catch (e: Exception) {
-                // Log error but continue with next order
-                Log.e(TAG, "Error processing order ${orderSummary.id}, skipping", e)
-                // Optionally, you could still mark it as processed to avoid retrying
-                // For now, we skip it so it can be retried later
-            }
-        }
+        // Update progress
+        _processingState.value = OrderProcessingState.Processing(
+            currentOrderId = orderToProcess.id,
+            remainingOrders = remainingAfterThis
+        )
+        
+        // Fetch order details
+        val orderDetails = apiClient.getOrderDetails(orderToProcess.id)
+        
+        // Update products from order
+        val updatedCount = updateProductsFromOrder(orderDetails)
+        
+        // Mark order as processed
+        markOrderAsProcessed(orderToProcess.id)
+        
+        Log.d(TAG, "Processed order ${orderToProcess.id}, updated $updatedCount products, $remainingAfterThis remaining")
         
         // Step 6: Complete
-        _processingState.value = OrderProcessingState.Completed(processedCount, updatedProductCount)
+        _processingState.value = OrderProcessingState.Completed(
+            updatedProductCount = updatedCount,
+            remainingOrders = remainingAfterThis
+        )
     }
     
     /**
