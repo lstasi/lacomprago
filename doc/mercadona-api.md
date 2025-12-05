@@ -53,6 +53,10 @@ Content-Type: application/json
 - The `customer_id` is required for customer-specific API calls
 - For LaCompraGo Phase 1, we'll use token paste instead of login
 
+> ⚠️ **Security Note**: Token pasting is used for development and testing purposes.
+> For production use, consider implementing proper OAuth flow with secure token
+> acquisition. Never share your access token publicly or store it in version control.
+
 ---
 
 ## Customer Information

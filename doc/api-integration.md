@@ -851,6 +851,7 @@ suspend fun processOrders(
 ): Int {
     var processedCount = 0
     var page = 1
+    var totalCount = 0 // Total unprocessed orders (updated as we fetch pages)
     
     // Fetch all pages of orders
     do {
@@ -860,6 +861,8 @@ suspend fun processOrders(
         val unprocessedOrders = orderList.results.filter { 
             it.id !in processedOrders.processedOrderIds 
         }
+        
+        totalCount += unprocessedOrders.size
         
         for ((index, orderSummary) in unprocessedOrders.withIndex()) {
             if (!shouldContinue()) break
