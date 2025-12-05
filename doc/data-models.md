@@ -258,6 +258,14 @@ Full order details including products (lines).
 // Order details use the same OrderSummary structure but include lines
 // when fetching individual order details
 
+/**
+ * Represents a line item in an order.
+ *
+ * @property product The product details
+ * @property quantity Number of units ordered (can be fractional for weight-based products)
+ * @property version Cart/line version number, used for concurrency control
+ * @property sources Indicators for how product was added (e.g., "+RP" = regular purchase)
+ */
 data class OrderLine(
     val product: MercadonaProduct,
     val quantity: Double,
@@ -265,6 +273,9 @@ data class OrderLine(
     val sources: List<String> = emptyList()
 )
 
+/**
+ * Mercadona product representation as returned by the API.
+ */
 data class MercadonaProduct(
     val id: String,
     @SerializedName("display_name") val displayName: String,
@@ -286,6 +297,23 @@ data class ProductCategory(
     val order: Int
 )
 
+/**
+ * Price and selling configuration for a product.
+ *
+ * @property unitPrice Price per unit
+ * @property bulkPrice Price per reference unit (e.g., per kg)
+ * @property referencePrice Reference price for comparison
+ * @property referenceFormat Reference unit format (e.g., "kg")
+ * @property sizeFormat Size format (e.g., "kg", "L")
+ * @property unitSize Size of one unit
+ * @property sellingMethod How product is sold: 0 = by unit, 1 = by weight, 2 = by bunch
+ * @property approxSize True if product size is approximate (for weight-based products)
+ * @property bunchSelector True if product can be sold in bunches
+ * @property minBunchAmount Minimum bunch quantity
+ * @property incrementBunchAmount Quantity increment for bunches
+ * @property unitSelector True if quantity can be selected by unit
+ * @property iva VAT percentage (4, 10, or 21)
+ */
 data class PriceInstructions(
     @SerializedName("unit_price") val unitPrice: String,
     @SerializedName("bulk_price") val bulkPrice: String,
@@ -314,6 +342,13 @@ data class ProductBadges(
     @SerializedName("requires_age_check") val requiresAgeCheck: Boolean = false
 )
 ```
+
+**Selling Method Values**
+| Value | Description |
+|-------|-------------|
+| 0 | Sold by unit (discrete items) |
+| 1 | Sold by weight (approximate size) |
+| 2 | Sold by bunch (grouped items) |
 
 ### 4. Cart Response
 
@@ -390,6 +425,11 @@ data class CartSummary(
 
 Request body for updating the shopping cart.
 
+> **Note**: The request uses `Int` for quantity (discrete units ordered), while the 
+> response uses `Double` (actual quantity including weight-based products). This is 
+> intentional as you can only order whole units, but fractional quantities may result 
+> from weight-based products.
+
 ```kotlin
 data class CartUpdateRequest(
     val id: String,
@@ -397,6 +437,13 @@ data class CartUpdateRequest(
     val lines: List<CartLineRequest>
 )
 
+/**
+ * Line item for cart update request.
+ *
+ * @property quantity Number of units to order (always whole number)
+ * @property productId Mercadona product ID
+ * @property sources Source indicators (usually empty for manual additions)
+ */
 data class CartLineRequest(
     val quantity: Int,
     @SerializedName("product_id") val productId: String,
@@ -529,6 +576,10 @@ When processing an order from the Mercadona API, extract products from order lin
 /**
  * Extract products from Mercadona order lines.
  * The Mercadona API returns products in the 'lines' field.
+ *
+ * @param orderLines List of order lines from Mercadona order response
+ * @param orderDate Timestamp of when the order was placed (from start_date field)
+ * @return List of ProductUpdate objects for updating local product database
  */
 fun extractProductsFromOrder(
     orderLines: List<OrderLine>,
@@ -545,6 +596,9 @@ fun extractProductsFromOrder(
     }
 }
 
+/**
+ * Intermediate object for transferring product data from API to local storage.
+ */
 data class ProductUpdate(
     val id: String,
     val name: String,
@@ -555,6 +609,10 @@ data class ProductUpdate(
 
 /**
  * Update local product with data from Mercadona order.
+ *
+ * @param existingProduct Existing product from local storage, or null if new
+ * @param update Product update data extracted from Mercadona order
+ * @return Updated or new Product for local storage
  */
 fun updateProductFromMercadona(
     existingProduct: Product?,
