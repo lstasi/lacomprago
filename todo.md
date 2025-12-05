@@ -76,24 +76,24 @@
 
 ## Phase 7: Order Processing Feature
 
-- [ ] Create order processing dialog UI
-- [ ] Implement OrderProcessingViewModel
-- [ ] Fetch list of orders from API
-- [ ] Filter out processed orders
-- [ ] Implement sequential order download:
-  - [ ] Download order one at a time
-  - [ ] Extract products from order
-  - [ ] Update product frequency and last purchase
-  - [ ] Save products.json after each order
-  - [ ] Mark order as processed
-  - [ ] Save processed_orders.json
-- [ ] Show progress (current/total, order ID)
-- [ ] Implement cancellation:
-  - [ ] Cancel button
-  - [ ] Stop processing
-  - [ ] Save partial progress
-- [ ] Handle errors (skip order and continue)
-- [ ] Show completion/cancelled message
+- [x] Create order processing dialog UI
+- [x] Implement OrderProcessingViewModel
+- [x] Fetch list of orders from API
+- [x] Filter out processed orders
+- [x] Implement sequential order download:
+  - [x] Download order one at a time
+  - [x] Extract products from order
+  - [x] Update product frequency and last purchase
+  - [x] Save products.json after each order
+  - [x] Mark order as processed
+  - [x] Save processed_orders.json
+- [x] Show progress (current/total, order ID)
+- [x] Implement cancellation:
+  - [x] Cancel button
+  - [x] Stop processing
+  - [x] Save partial progress
+- [x] Handle errors (skip order and continue)
+- [x] Show completion/cancelled message
 
 ## Phase 8: Shopping Cart Feature
 

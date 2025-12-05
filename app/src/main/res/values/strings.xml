@@ -20,11 +20,18 @@
     <string name="empty_products">No products yet. Refresh to process orders.</string>
     
     <!-- Order Processing -->
-    <string name="processing_orders">Processing Orders</string>
+    <string name="processing_orders">Processing Order</string>
     <string name="cancel">Cancel</string>
-    <string name="processing_status">Processing order %1$d of %2$d</string>
-    <string name="processing_complete">Processing complete. %1$d orders processed.</string>
-    <string name="processing_cancelled">Processing cancelled. %1$d orders processed.</string>
+    <string name="ok">OK</string>
+    <string name="fetching_orders">Fetching orders…</string>
+    <string name="processing_status">Processing order…</string>
+    <string name="order_id_format">Order ID: %1$s</string>
+    <string name="remaining_orders_format">%1$d orders remaining</string>
+    <string name="processing_complete">Order processed!\n%1$d products updated.</string>
+    <string name="processing_complete_remaining">Order processed!\n%1$d products updated.\n%2$d orders remaining.</string>
+    <string name="processing_complete_none">No new orders to process.</string>
+    <string name="processing_cancelled">Processing cancelled.</string>
+    <string name="processing_error">Error: %1$s</string>
     
     <!-- Cart -->
     <string name="cart_title">Shopping Cart</string>

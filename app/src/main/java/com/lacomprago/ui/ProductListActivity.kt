@@ -45,15 +45,24 @@ class ProductListActivity : AppCompatActivity() {
     }
     
     private fun setupListeners() {
-        // Refresh FAB click
+        // Refresh FAB click - shows order processing dialog
         binding.refreshFab.setOnClickListener {
-            viewModel.refreshProducts()
+            showOrderProcessingDialog()
         }
         
         // Retry button click (in error state)
         binding.retryButton.setOnClickListener {
             viewModel.loadProducts()
         }
+    }
+    
+    private fun showOrderProcessingDialog() {
+        val dialog = OrderProcessingDialogFragment.newInstance()
+        dialog.setOnProcessingCompleteListener {
+            // Refresh the product list after processing completes
+            viewModel.refreshProducts()
+        }
+        dialog.show(supportFragmentManager, OrderProcessingDialogFragment.TAG)
     }
     
     private fun observeProductListState() {
