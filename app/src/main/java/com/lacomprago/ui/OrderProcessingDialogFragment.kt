@@ -42,8 +42,8 @@ class OrderProcessingDialogFragment : DialogFragment() {
         val tokenStorage = TokenStorage(context)
         val apiClient = ApiClient.create(tokenStorage)
         val jsonStorage = JsonStorage(context)
-        viewModel = OrderProcessingViewModel(apiClient, jsonStorage)
-        
+        viewModel = OrderProcessingViewModel(apiClient, jsonStorage, tokenStorage)
+
         // Inflate the custom layout
         val view = LayoutInflater.from(context).inflate(R.layout.dialog_order_processing, null)
         
