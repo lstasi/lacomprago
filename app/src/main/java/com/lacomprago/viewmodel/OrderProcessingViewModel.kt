@@ -7,13 +7,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lacomprago.data.api.ApiClient
 import com.lacomprago.data.api.ApiException
-import com.lacomprago.data.api.model.OrderResponse
+import com.lacomprago.data.api.model.OrderDetailsResponse
+import com.lacomprago.data.api.model.OrderResult
 import com.lacomprago.model.OrderProcessingState
 import com.lacomprago.model.ProcessedOrders
 import com.lacomprago.model.Product
 import com.lacomprago.model.ProductList
 import com.lacomprago.storage.JsonStorage
 import com.lacomprago.storage.JsonStorageException
+import com.lacomprago.storage.TokenStorage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -33,7 +35,8 @@ import java.util.TimeZone
  */
 class OrderProcessingViewModel(
     private val apiClient: ApiClient,
-    private val jsonStorage: JsonStorage
+    private val jsonStorage: JsonStorage,
+    private val tokenStorage: TokenStorage
 ) : ViewModel() {
     
     private val _processingState = MutableLiveData<OrderProcessingState>(OrderProcessingState.Idle)
@@ -91,11 +94,16 @@ class OrderProcessingViewModel(
      * Only the first unprocessed order is fetched and processed.
      */
     private suspend fun processSingleOrder() {
-        // Step 1: Set state to fetching orders
+        // Step 1: Get customer ID
+        val customerId = tokenStorage.getCustomerId()
+            ?: throw ApiException("Customer ID not configured. Please set up your account.", 0)
+
+        // Step 2: Set state to fetching orders
         _processingState.value = OrderProcessingState.FetchingOrders
         
-        // Step 2: Fetch order list from API
-        val orderList = apiClient.getOrderList()
+        // Step 3: Fetch order list from API
+        val orderListResponse = apiClient.getOrderList(customerId)
+        val orderList = orderListResponse.results
         Log.d(TAG, "Fetched ${orderList.size} orders from API")
         
         // Step 3: Load processed orders
@@ -106,7 +114,7 @@ class OrderProcessingViewModel(
         Log.d(TAG, "Already processed ${processedOrderIds.size} orders")
         
         // Step 4: Filter out already processed orders
-        val unprocessedOrders = orderList.filter { it.id !in processedOrderIds }
+        val unprocessedOrders = orderList.filter { it.id.toString() !in processedOrderIds }
         Log.d(TAG, "Found ${unprocessedOrders.size} unprocessed orders")
         
         if (unprocessedOrders.isEmpty()) {
@@ -123,18 +131,18 @@ class OrderProcessingViewModel(
         
         // Update progress
         _processingState.value = OrderProcessingState.Processing(
-            currentOrderId = orderToProcess.id,
+            currentOrderId = orderToProcess.id.toString(),
             remainingOrders = remainingAfterThis
         )
         
-        // Fetch order details
-        val orderDetails = apiClient.getOrderDetails(orderToProcess.id)
-        
+        // Fetch order details (includes product items)
+        val orderDetails = apiClient.getOrderDetails(customerId, orderToProcess.id.toString())
+
         // Update products from order
-        val updatedCount = updateProductsFromOrder(orderDetails)
+        val updatedCount = updateProductsFromOrder(orderDetails, orderToProcess)
         
         // Mark order as processed
-        markOrderAsProcessed(orderToProcess.id)
+        markOrderAsProcessed(orderToProcess.id.toString())
         
         Log.d(TAG, "Processed order ${orderToProcess.id}, updated $updatedCount products, $remainingAfterThis remaining")
         
@@ -150,43 +158,58 @@ class OrderProcessingViewModel(
      * For each item in the order, increment the product frequency
      * and update the last purchase date.
      *
-     * @param order The order to process
+     * @param orderDetails The order details with product items
+     * @param orderResult The order result with metadata (dates, etc.)
      * @return The number of products updated
      */
-    private suspend fun updateProductsFromOrder(order: OrderResponse): Int = withContext(Dispatchers.IO) {
+    private suspend fun updateProductsFromOrder(
+        orderDetails: OrderDetailsResponse,
+        orderResult: OrderResult
+    ): Int = withContext(Dispatchers.IO) {
         // Load current products
         val productList = jsonStorage.loadProductList() ?: ProductList(emptyList())
         val productsMap = productList.products.associateBy { it.id }.toMutableMap()
         
-        // Parse order date
-        val orderTimestamp = parseOrderDate(order.orderDate)
+        // Parse order date from OrderResult (use startDate or endDate)
+        val orderTimestamp = parseOrderDate(orderResult.startDate)
+        
+        // Get items from order details
+        val items = orderDetails.items
+        if (items.isNullOrEmpty()) {
+            Log.w(TAG, "Order ${orderResult.id} has no items")
+            return@withContext 0
+        }
         
         var updatedCount = 0
         
         // Update each product from the order
-        for (item in order.items) {
-            val existingProduct = productsMap[item.productId]
+        for (item in items) {
+            val productId = item.productId ?: continue
+            val productName = item.productName ?: "Unknown Product"
+            val quantity = item.quantity ?: 1
+            
+            val existingProduct = productsMap[productId]
             
             val updatedProduct = if (existingProduct != null) {
                 // Update existing product
                 existingProduct.copy(
                     frequency = existingProduct.frequency + 1,
                     lastPurchase = maxOf(existingProduct.lastPurchase, orderTimestamp),
-                    totalQuantity = existingProduct.totalQuantity + item.quantity
+                    totalQuantity = existingProduct.totalQuantity + quantity
                 )
             } else {
                 // Create new product entry
                 Product(
-                    id = item.productId,
-                    name = item.productName,
+                    id = productId,
+                    name = productName,
                     frequency = 1,
                     lastPurchase = orderTimestamp,
                     category = item.category,
-                    totalQuantity = item.quantity.toDouble()
+                    totalQuantity = quantity.toDouble()
                 )
             }
             
-            productsMap[item.productId] = updatedProduct
+            productsMap[productId] = updatedProduct
             updatedCount++
         }
         

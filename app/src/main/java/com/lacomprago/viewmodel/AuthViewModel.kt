@@ -7,6 +7,7 @@ import com.lacomprago.model.AuthState
 import com.lacomprago.storage.TokenStorage
 import com.lacomprago.storage.TokenValidationResult
 import com.lacomprago.storage.TokenValidator
+import com.lacomprago.util.JwtDecoder
 
 /**
  * ViewModel for handling authentication state.
@@ -27,10 +28,18 @@ class AuthViewModel(
     /**
      * Check if a token already exists in storage.
      * Updates auth state accordingly.
+     * Also extracts and saves customer ID from JWT if not already stored.
      */
     private fun checkExistingToken() {
         val token = tokenStorage.getToken()
         _authState.value = if (token != null) {
+            // Ensure customer ID is extracted and saved (for tokens stored before JWT decoding was added)
+            if (tokenStorage.getCustomerId() == null) {
+                val customerId = JwtDecoder.extractCustomerId(token)
+                if (customerId != null) {
+                    tokenStorage.saveCustomerId(customerId)
+                }
+            }
             AuthState.TokenValid(token)
         } else {
             AuthState.NoToken
@@ -39,11 +48,12 @@ class AuthViewModel(
     
     /**
      * Submit a token for validation and storage.
-     * @param token The API token to validate and store
+     * Extracts customer_uuid from JWT token claims automatically.
+     * @param token The API token (JWT) to validate and store
      */
     fun submitToken(token: String) {
         val trimmedToken = token.trim()
-        
+
         // Validate token format
         when (val validationResult = tokenValidator.validate(trimmedToken)) {
             is TokenValidationResult.Invalid -> {
@@ -55,12 +65,20 @@ class AuthViewModel(
             }
         }
         
+        // Extract customer_uuid from JWT token
+        val customerId = JwtDecoder.extractCustomerId(trimmedToken)
+        if (customerId.isNullOrEmpty()) {
+            _authState.value = AuthState.TokenInvalid("Could not extract customer ID from token")
+            return
+        }
+
         // Set validating state
         _authState.value = AuthState.ValidatingToken
         
-        // Store the token (actual API validation will happen on first API call)
+        // Store the token and customer ID (actual API validation will happen on first API call)
         tokenStorage.saveToken(trimmedToken)
-        
+        tokenStorage.saveCustomerId(customerId)
+
         // Mark as valid
         _authState.value = AuthState.TokenValid(trimmedToken)
     }
