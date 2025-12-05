@@ -44,6 +44,24 @@ class TokenStorage(context: Context) {
     }
     
     /**
+     * Save the customer ID securely.
+     * @param customerId The customer ID to store
+     */
+    fun saveCustomerId(customerId: String) {
+        encryptedPrefs.edit {
+            putString(KEY_CUSTOMER_ID, customerId)
+        }
+    }
+
+    /**
+     * Retrieve the stored customer ID.
+     * @return The stored customer ID, or null if not set
+     */
+    fun getCustomerId(): String? {
+        return encryptedPrefs.getString(KEY_CUSTOMER_ID, null)
+    }
+
+    /**
      * Check if a token is stored.
      * @return true if a token exists, false otherwise
      */
@@ -52,12 +70,13 @@ class TokenStorage(context: Context) {
     }
     
     /**
-     * Clear the stored token.
+     * Clear the stored token and customer ID.
      */
     fun clearToken() {
         encryptedPrefs.edit {
             remove(KEY_TOKEN)
             remove(KEY_STORED_AT)
+            remove(KEY_CUSTOMER_ID)
         }
     }
     
@@ -74,5 +93,6 @@ class TokenStorage(context: Context) {
         private const val PREFS_FILE_NAME = "token_prefs"
         private const val KEY_TOKEN = "api_token"
         private const val KEY_STORED_AT = "stored_at"
+        private const val KEY_CUSTOMER_ID = "customer_id"
     }
 }

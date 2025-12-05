@@ -4,7 +4,7 @@
     
     <!-- Token Screen -->
     <string name="token_instruction">Enter your API token to get started</string>
-    <string name="token_input_hint">Enter your API token</string>
+    <string name="token_input_hint">API Token</string>
     <string name="token_validate">Validate Token</string>
     <string name="token_invalid">Invalid token. Please try again.</string>
     <string name="token_valid">Token validated successfully</string>

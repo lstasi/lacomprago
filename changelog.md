@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed "Customer ID not configured" error when using previously stored tokens
+- AuthViewModel now extracts and saves customer_uuid from existing JWT tokens on app startup (migration for tokens stored before JWT decoding was added)
+
 ### Added (Phase 7: Order Processing Feature)
 - OrderProcessingState sealed class for managing order processing UI states
 - OrderProcessingViewModel for handling order processing logic

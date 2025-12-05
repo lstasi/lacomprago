@@ -3,9 +3,9 @@ package com.lacomprago.data.api
 import com.google.gson.Gson
 import com.lacomprago.data.api.model.CartRequest
 import com.lacomprago.data.api.model.CartResponse
+import com.lacomprago.data.api.model.OrderDetailsResponse
 import com.lacomprago.data.api.model.OrderListResponse
-import com.lacomprago.data.api.model.OrderResponse
-import com.lacomprago.data.api.model.OrderSummary
+import com.lacomprago.data.api.model.OrderResult
 import com.lacomprago.data.api.model.ValidateTokenResponse
 import com.lacomprago.storage.TokenStorage
 import kotlinx.coroutines.Dispatchers
@@ -60,30 +60,56 @@ class ApiClient(
     /**
      * Get the list of orders from the API.
      *
-     * @return List of order summaries
+     * @param customerId The customer ID
+     * @param page The page number (default 1)
+     * @return OrderListResponse containing results and pagination info
      * @throws ApiException if the request fails
      */
-    suspend fun getOrderList(): List<OrderSummary> = withContext(Dispatchers.IO) {
+    suspend fun getOrderList(customerId: String, page: Int = 1): OrderListResponse = withContext(Dispatchers.IO) {
         val request = Request.Builder()
-            .url("${ApiConfig.BASE_URL}api/orders")
+            .url("${ApiConfig.BASE_URL}api/customers/$customerId/orders/?lang=es&wh=bcn1&page=$page")
             .get()
             .build()
         
         httpClient.newCall(request).execute().use { response ->
             handleResponse<OrderListResponse>(response, "Failed to fetch orders")
-        }.orders
+        }
     }
     
     /**
-     * Get details of a specific order.
+     * Get all orders from all pages.
      *
-     * @param orderId The ID of the order to fetch
-     * @return Full order details
+     * @param customerId The customer ID
+     * @return List of all order results from all pages
      * @throws ApiException if the request fails
      */
-    suspend fun getOrderDetails(orderId: String): OrderResponse = withContext(Dispatchers.IO) {
+    suspend fun getAllOrders(customerId: String): List<OrderResult> = withContext(Dispatchers.IO) {
+        val allOrders = mutableListOf<OrderResult>()
+        var page = 1
+        var hasMorePages = true
+        
+        while (hasMorePages) {
+            val response = getOrderList(customerId, page)
+            allOrders.addAll(response.results)
+            
+            hasMorePages = response.nextPage != null
+            page++
+        }
+        
+        allOrders
+    }
+    
+    /**
+     * Get details of a specific order including product items.
+     *
+     * @param customerId The customer ID
+     * @param orderId The ID of the order to fetch
+     * @return Order details with product items
+     * @throws ApiException if the request fails
+     */
+    suspend fun getOrderDetails(customerId: String, orderId: String): OrderDetailsResponse = withContext(Dispatchers.IO) {
         val request = Request.Builder()
-            .url("${ApiConfig.BASE_URL}api/orders/$orderId")
+            .url("${ApiConfig.BASE_URL}api/customers/$customerId/orders/$orderId/?lang=es&wh=bcn1")
             .get()
             .build()
         
