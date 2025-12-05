@@ -184,6 +184,28 @@ Product List Screen
               └── Submit to API
 ```
 
+### Debug Mode Screen (Debug builds only)
+```
+Main Screen
+     ↓ (long press version, debug builds only)
+Debug Mode Screen
+     ├── Token Management
+     │        ├── Token input/paste
+     │        ├── Customer ID input
+     │        └── Token validation
+     ├── Endpoint Testing
+     │        ├── Select endpoint
+     │        ├── Configure parameters
+     │        ├── Send request
+     │        └── View response
+     └── Response Viewer
+              ├── Status code
+              ├── Headers
+              └── Body (formatted JSON)
+```
+
+See [debug-mode.md](./debug-mode.md) for detailed specification.
+
 ## State Management
 
 ### UI State

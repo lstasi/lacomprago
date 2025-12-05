@@ -4,6 +4,9 @@
 
 This directory contains the complete architecture and design documentation for the LaCompraGo Android application. The documentation has been simplified to focus on minimal dependencies and straightforward implementation.
 
+> ⚠️ **IMPORTANT**: This project uses the **Mercadona API** (reverse-engineered).
+> API endpoints may change without notice. Use at your own risk.
+
 ## Documentation Structure
 
 ### 1. [Architecture Overview](./architecture.md)
@@ -54,21 +57,56 @@ This directory contains the complete architecture and design documentation for t
 **Contents**:
 - OkHttp-only setup (no Retrofit)
 - Token interceptor
-- API endpoints
-- Sequential order processing
+- Mercadona API endpoints
+- Rate limiting
+- Sequential order processing with pagination
 - Error handling
 - Retry logic
 - Progress tracking
 
+---
+
+### 4. [Mercadona API Reference](./mercadona-api.md) ← **NEW**
+**Purpose**: Detailed documentation of Mercadona API endpoints
+
+**Contents**:
+- All available API endpoints
+- Request/response formats
+- Authentication requirements
+- Rate limiting guidelines
+- Data model mappings
+- Error handling
+
 **Key Endpoints**:
-- Token validation: `/api/validate`
-- Order list: `/api/orders`
-- Order details: `/api/orders/{id}`
-- Create cart: `/api/cart`
+- Customer Info: `GET /customers/{id}/`
+- List Orders: `GET /customers/{id}/orders/`
+- Order Details: `GET /customers/{id}/orders/{order_id}/`
+- Get Cart: `GET /customers/{id}/cart/`
+- Update Cart: `PUT /customers/{id}/cart/`
+- Recommendations: `GET /customers/{id}/recommendations/myregulars/{type}/`
 
 ---
 
-### 4. [Authentication Flow](./authentication.md)
+### 5. [Debug Mode Specification](./debug-mode.md) ← **NEW**
+**Purpose**: Debug UI for API testing (debug builds only)
+
+**Contents**:
+- Token management interface
+- Endpoint selection list
+- Request configuration
+- Request preview
+- Response viewer
+- Validation checklist
+
+**Purpose**:
+- Test individual API endpoints before integration
+- Validate token functionality
+- Debug API responses
+- Speed up development
+
+---
+
+### 6. [Authentication Flow](./authentication.md)
 **Purpose**: Simple token-based authentication
 
 **Contents**:
@@ -87,7 +125,7 @@ This directory contains the complete architecture and design documentation for t
 
 ---
 
-### 5. [Feature Specifications](./features.md)
+### 7. [Feature Specifications](./features.md)
 **Purpose**: Detailed specifications for all features
 
 **Contents**:
@@ -95,7 +133,7 @@ This directory contains the complete architecture and design documentation for t
 #### Feature 1: Token Authentication
 - Text field for token input
 - Encrypted storage
-- Validation on first API call
+- Validation via Customer Info endpoint
 
 #### Feature 2: Product List
 - Display products with frequency and last purchase
@@ -105,13 +143,15 @@ This directory contains the complete architecture and design documentation for t
 #### Feature 3: Order Processing
 - Sequential download (one by one)
 - Progress display (X of Y orders)
+- Handle pagination
 - Cancellable with partial progress save
 - Update products after each order
 - Track processed orders
 
 #### Feature 4: Shopping Cart
 - Auto-generate from frequent products
-- Submit to API
+- Use recommendations API
+- Submit to Mercadona cart API
 - Success/error handling
 
 ---
@@ -320,7 +360,13 @@ for ((index, order) in orders.withIndex()) {
 
 ## Version History
 
-- **v0.2.0** - Simplified design (Current)
+- **v0.3.0** - Major Refactor (Current)
+  - Mercadona API integration documentation
+  - Debug Mode specification
+  - Rate limiting and validation requirements
+  - Granular development approach
+
+- **v0.2.0** - Simplified design
   - Token-based authentication
   - JSON file storage
   - Minimal dependencies
@@ -333,5 +379,5 @@ for ((index, order) in orders.withIndex()) {
 
 ---
 
-*Last Updated: October 29, 2025*
-*Status: Simplified Design Phase Complete - Ready for Implementation*
+*Last Updated: December 2024*
+*Status: Major Refactor - Documentation Phase*
