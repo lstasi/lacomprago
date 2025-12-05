@@ -488,6 +488,84 @@ Token Input → Product List → Cart Preview
 
 ---
 
+## Feature 5: Debug Mode (Debug builds only)
+
+> **See [debug-mode.md](./debug-mode.md) for full specification**
+
+### User Story
+As a developer, I want to test individual API endpoints, so that I can validate the Mercadona API integration before building features.
+
+### Requirements
+
+**Functional Requirements**
+- Only visible in debug builds (BuildConfig.DEBUG)
+- Token management (paste/clear/validate)
+- Customer ID input and storage
+- List of available API endpoints
+- Request configuration (path params, query params, body)
+- Request preview (URL, headers, body)
+- Response viewer (status, headers, body)
+
+**Non-Functional Requirements**
+- Hidden in release builds
+- No token logging
+- Clear response formatting
+
+### UI Screen
+
+**Debug Mode Screen**
+```
+┌─────────────────────────────────────────────────────┐
+│  Debug Mode                                         │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  Token: ●●●●●●●●●●●●●● [Paste] [Clear] [Validate]   │
+│  Customer ID: [__________] [Save]                   │
+│                                                     │
+│  ─────────────────────────────────────────────────  │
+│                                                     │
+│  Available Endpoints:                               │
+│  ○ Customer Info                                    │
+│  ○ List Orders                                      │
+│  ○ Get Order Details                                │
+│  ○ Get Cart                                         │
+│  ○ Get Recommendations                              │
+│                                                     │
+│  ─────────────────────────────────────────────────  │
+│                                                     │
+│  Request Configuration:                             │
+│  [Endpoint-specific parameters]                     │
+│                                                     │
+│  [Send Request]                                     │
+│                                                     │
+│  ─────────────────────────────────────────────────  │
+│                                                     │
+│  Response:                                          │
+│  Status: 200 OK (342ms)                             │
+│  ┌───────────────────────────────────────────────┐  │
+│  │ { "id": 12345, "name": "John", ... }          │  │
+│  └───────────────────────────────────────────────┘  │
+│  [Copy] [Clear]                                     │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+### Acceptance Criteria
+
+- [ ] Only visible in debug builds
+- [ ] Token can be pasted and saved
+- [ ] Token can be cleared
+- [ ] Customer ID can be saved
+- [ ] All Mercadona endpoints listed
+- [ ] Request configuration for each endpoint
+- [ ] Request preview before sending
+- [ ] Response displayed with status code
+- [ ] Response body formatted as JSON
+- [ ] Response can be copied
+- [ ] Errors displayed clearly
+
+---
+
 ## Future Enhancements
 
 ### Phase 2
@@ -498,12 +576,18 @@ Token Input → Product List → Cart Preview
 
 ### Phase 3
 - Multiple shopping lists
-- Product recommendations
+- Product recommendations integration
 - Price tracking
 - Budget monitoring
+
+### Phase 4
+- Login with email/password
+- Full checkout flow
+- Address management
+- Delivery slot selection
 
 ---
 
 ## Conclusion
 
-These simplified feature specifications provide a clear, achievable implementation plan for LaCompraGo, focusing on essential functionality with minimal complexity.
+These simplified feature specifications provide a clear, achievable implementation plan for LaCompraGo, focusing on essential functionality with minimal complexity. The addition of Debug Mode ensures thorough API validation before feature integration.
