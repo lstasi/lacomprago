@@ -140,28 +140,30 @@ Paginated list of orders from the Mercadona API.
 
 ```kotlin
 data class OrderListResponse(
-    @SerializedName("next_page") val nextPage: Int?,
-    val results: List<OrderSummary>
+    @SerializedName("next_page") val nextPage: String?,
+    val results: List<OrderResult>
 )
 
-data class OrderSummary(
-    val id: Int,
-    @SerializedName("order_id") val orderId: Int,
+data class OrderResult(
+    val id: Long,
+    @SerializedName("order_id") val orderId: Long,
     val status: Int,
     @SerializedName("status_ui") val statusUi: String,
     val price: String,
     @SerializedName("products_count") val productsCount: Int,
     @SerializedName("start_date") val startDate: String,
     @SerializedName("end_date") val endDate: String,
-    val address: OrderAddress? = null,
-    @SerializedName("payment_method") val paymentMethod: PaymentMethod? = null,
-    val slot: DeliverySlot? = null,
-    val summary: OrderPriceSummary? = null,
-    @SerializedName("warehouse_code") val warehouseCode: String? = null
+    val address: OrderAddress,
+    @SerializedName("payment_method") val paymentMethod: PaymentMethod,
+    val slot: DeliverySlot,
+    val summary: OrderSummaryDetails,
+    @SerializedName("warehouse_code") val warehouseCode: String,
+    @SerializedName("click_and_collect") val clickAndCollect: Boolean,
+    val timezone: String
 )
 
 data class OrderAddress(
-    val id: Int,
+    val id: Long,
     val address: String,
     @SerializedName("address_detail") val addressDetail: String? = null,
     val comments: String? = null,
@@ -174,7 +176,7 @@ data class OrderAddress(
 )
 
 data class PaymentMethod(
-    val id: Int,
+    val id: Long,
     @SerializedName("credit_card_number") val creditCardNumber: String,
     @SerializedName("credit_card_type") val creditCardType: Int,
     @SerializedName("default_card") val defaultCard: Boolean = false,
@@ -188,16 +190,20 @@ data class DeliverySlot(
     val available: Boolean,
     val start: String,
     val end: String,
-    val price: String
+    val price: String,
+    @SerializedName("cutoff_time") val cutoffTime: String? = null,
+    val timezone: String? = null
 )
 
-data class OrderPriceSummary(
+data class OrderSummaryDetails(
     val products: String,
     val slot: String,
+    @SerializedName("slot_bonus") val slotBonus: String? = null,
     @SerializedName("tax_base") val taxBase: String,
     val taxes: String,
+    @SerializedName("tax_type") val taxType: String,
     val total: String,
-    @SerializedName("volume_extra_cost") val volumeExtraCost: VolumeExtraCost? = null
+    @SerializedName("volume_extra_cost") val volumeExtraCost: VolumeExtraCost
 )
 
 data class VolumeExtraCost(
@@ -252,103 +258,30 @@ data class VolumeExtraCost(
 
 ### 3. Order Details Response
 
-Full order details including products (lines).
+Full order details including products (items).
 
 ```kotlin
-// Order details use the same OrderSummary structure but include lines
-// when fetching individual order details
-
 /**
- * Represents a line item in an order.
- *
- * @property product The product details
- * @property quantity Number of units ordered (can be fractional for weight-based products)
- * @property version Cart/line version number, used for concurrency control
- * @property sources Indicators for how product was added (e.g., "+RP" = regular purchase)
+ * Response from the API when fetching order details with product items.
  */
-data class OrderLine(
-    val product: MercadonaProduct,
-    val quantity: Double,
-    val version: Int,
-    val sources: List<String> = emptyList()
+data class OrderDetailsResponse(
+    val id: Long?,
+    @SerializedName("order_id") val orderId: Long?,
+    val items: List<OrderDetailItem>?
 )
 
 /**
- * Mercadona product representation as returned by the API.
+ * Individual product item in an order details response.
  */
-data class MercadonaProduct(
-    val id: String,
-    @SerializedName("display_name") val displayName: String,
-    val categories: List<ProductCategory>,
-    @SerializedName("price_instructions") val priceInstructions: PriceInstructions,
-    val packaging: String? = null,
-    val limit: Int = 999,
-    val published: Boolean = true,
-    @SerializedName("share_url") val shareUrl: String? = null,
-    val slug: String? = null,
-    val thumbnail: String? = null,
-    val badges: ProductBadges? = null
-)
-
-data class ProductCategory(
-    val id: Int,
-    val level: Int,
-    val name: String,
-    val order: Int
-)
-
-/**
- * Price and selling configuration for a product.
- *
- * @property unitPrice Price per unit
- * @property bulkPrice Price per reference unit (e.g., per kg)
- * @property referencePrice Reference price for comparison
- * @property referenceFormat Reference unit format (e.g., "kg")
- * @property sizeFormat Size format (e.g., "kg", "L")
- * @property unitSize Size of one unit
- * @property sellingMethod How product is sold: 0 = by unit, 1 = by weight, 2 = by bunch
- * @property approxSize True if product size is approximate (for weight-based products)
- * @property bunchSelector True if product can be sold in bunches
- * @property minBunchAmount Minimum bunch quantity
- * @property incrementBunchAmount Quantity increment for bunches
- * @property unitSelector True if quantity can be selected by unit
- * @property iva VAT percentage (4, 10, or 21)
- */
-data class PriceInstructions(
-    @SerializedName("unit_price") val unitPrice: String,
-    @SerializedName("bulk_price") val bulkPrice: String,
-    @SerializedName("reference_price") val referencePrice: String,
-    @SerializedName("reference_format") val referenceFormat: String,
-    @SerializedName("size_format") val sizeFormat: String,
-    @SerializedName("unit_size") val unitSize: Double,
-    @SerializedName("unit_name") val unitName: String? = null,
-    @SerializedName("total_units") val totalUnits: Int? = null,
-    val iva: Int,
-    @SerializedName("is_new") val isNew: Boolean = false,
-    @SerializedName("is_pack") val isPack: Boolean = false,
-    @SerializedName("pack_size") val packSize: Int? = null,
-    @SerializedName("selling_method") val sellingMethod: Int = 0,
-    @SerializedName("approx_size") val approxSize: Boolean = false,
-    @SerializedName("bunch_selector") val bunchSelector: Boolean = false,
-    @SerializedName("min_bunch_amount") val minBunchAmount: Double = 1.0,
-    @SerializedName("increment_bunch_amount") val incrementBunchAmount: Double = 1.0,
-    @SerializedName("unit_selector") val unitSelector: Boolean = true,
-    @SerializedName("price_decreased") val priceDecreased: Boolean = false,
-    @SerializedName("drained_weight") val drainedWeight: Double? = null
-)
-
-data class ProductBadges(
-    @SerializedName("is_water") val isWater: Boolean = false,
-    @SerializedName("requires_age_check") val requiresAgeCheck: Boolean = false
+data class OrderDetailItem(
+    @SerializedName("product_id") val productId: String?,
+    @SerializedName("product_name") val productName: String?,
+    val quantity: Int?,
+    val category: String?,
+    val price: String?,
+    @SerializedName("total_price") val totalPrice: String?
 )
 ```
-
-**Selling Method Values**
-| Value | Description |
-|-------|-------------|
-| 0 | Sold by unit (discrete items) |
-| 1 | Sold by weight (approximate size) |
-| 2 | Sold by bunch (grouped items) |
 
 ### 4. Cart Response
 
@@ -570,27 +503,31 @@ sealed class CartState {
 
 ### 1. Product Update Logic (Mercadona API)
 
-When processing an order from the Mercadona API, extract products from order lines:
+When processing an order from the Mercadona API, extract products from order items:
 
 ```kotlin
 /**
- * Extract products from Mercadona order lines.
- * The Mercadona API returns products in the 'lines' field.
+ * Extract products from Mercadona order items.
+ * The Mercadona API returns products in the 'items' field of OrderDetailsResponse.
  *
- * @param orderLines List of order lines from Mercadona order response
+ * @param items List of items from OrderDetailsResponse
  * @param orderDate Timestamp of when the order was placed (from start_date field)
  * @return List of ProductUpdate objects for updating local product database
  */
 fun extractProductsFromOrder(
-    orderLines: List<OrderLine>,
+    items: List<OrderDetailItem>,
     orderDate: Long
 ): List<ProductUpdate> {
-    return orderLines.map { line ->
+    return items.mapNotNull { item ->
+        val productId = item.productId ?: return@mapNotNull null
+        val productName = item.productName ?: return@mapNotNull null
+        val quantity = item.quantity ?: return@mapNotNull null
+        
         ProductUpdate(
-            id = line.product.id,
-            name = line.product.displayName,
-            quantity = line.quantity,
-            category = line.product.categories.firstOrNull()?.name,
+            id = productId,
+            name = productName,
+            quantity = quantity.toDouble(),
+            category = item.category,
             orderDate = orderDate
         )
     }
@@ -746,16 +683,16 @@ fun validateProduct(product: Product): Boolean {
 ### Order Validation (Mercadona)
 
 ```kotlin
-fun validateMercadonaOrder(order: OrderSummary): Boolean {
+fun validateMercadonaOrder(order: OrderResult): Boolean {
     return order.id > 0 &&
            order.statusUi.isNotBlank() &&
            order.startDate.isNotBlank()
 }
 
-fun validateOrderLine(line: OrderLine): Boolean {
-    return line.product.id.isNotBlank() &&
-           line.product.displayName.isNotBlank() &&
-           line.quantity > 0
+fun validateOrderDetailItem(item: OrderDetailItem): Boolean {
+    return item.productId?.isNotBlank() == true &&
+           item.productName?.isNotBlank() == true &&
+           (item.quantity ?: 0) > 0
 }
 ```
 
@@ -771,8 +708,8 @@ fun validateOrderLine(line: OrderLine): Boolean {
 5. For each unprocessed order (with pagination handling):
    a. Fetch order details from /customers/{customer_id}/orders/{order_id}/
    b. Load products.json
-   c. For each line in order:
-      - Extract product info from line.product
+   c. For each item in order details:
+      - Extract product info from item (productId, productName, quantity, category)
       - Find product in local list by id
       - Update or create product entry
       - Increment frequency

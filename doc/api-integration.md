@@ -149,7 +149,7 @@ Authorization: Bearer {token}
 ```
 
 **Response (200 OK)**
-Full order details including address, payment, slot, and summary.
+Returns `OrderDetailsResponse` with product items.
 See [mercadona-api.md](./mercadona-api.md) for complete response structure.
 
 ### 4. Get Recommendations
@@ -280,7 +280,7 @@ class ApiClient(
      * @return Full order details
      * @throws ApiException if the request fails
      */
-    suspend fun getOrderDetails(customerId: String, orderId: Int): OrderResponse = withContext(Dispatchers.IO) {
+    suspend fun getOrderDetails(customerId: String, orderId: Int): OrderDetailsResponse = withContext(Dispatchers.IO) {
         require(customerId.isNotBlank()) { "Customer ID cannot be blank" }
         require(orderId > 0) { "Order ID must be positive" }
         
@@ -517,7 +517,7 @@ suspend fun processOrders(
 ): Int {
     var processedCount = 0
     var totalCount = 0
-    val allOrders = mutableListOf<OrderSummary>()
+    val allOrders = mutableListOf<OrderResult>()
     
     // 1. Fetch all pages of orders
     var page = 1
@@ -535,10 +535,8 @@ suspend fun processOrders(
         it.id !in processedOrders.processedOrderIds 
     }
     
-    totalCount = unprocessedOrders.size
-    
     // 4. Process each order sequentially with delays
-    for ((index, orderSummary) in unprocessedOrders.withIndex()) {
+    for ((index, order) in unprocessedOrders.withIndex()) {
         // Check if cancelled
         if (!shouldContinue()) {
             break
@@ -546,22 +544,22 @@ suspend fun processOrders(
         
         try {
             // Update progress
-            onProgress(index + 1, totalCount, orderSummary.id)
+            onProgress(index + 1, totalCount, order.id)
             
             // Fetch order details (rate limiter handles delays)
-            val order = apiClient.getOrderDetails(customerId, orderSummary.id)
+            val orderDetails = apiClient.getOrderDetails(customerId, order.id)
             
             // Update products
-            updateProductsFromOrder(order)
+            updateProductsFromOrder(orderDetails)
             
             // Mark order as processed
-            markOrderAsProcessed(orderSummary.id)
+            markOrderAsProcessed(order.id)
             
             processedCount++
             
         } catch (e: Exception) {
             // Log error but continue with next order
-            Log.e("OrderProcessing", "Error processing order ${orderSummary.id}", e)
+            Log.e("OrderProcessing", "Error processing order ${order.id}", e)
         }
     }
     
@@ -749,7 +747,7 @@ class MockApiServer {
         mockWebServer.shutdown()
     }
     
-    fun enqueueOrderList(orders: List<OrderSummary>) {
+    fun enqueueOrderList(orders: List<OrderResult>) {
         val response = OrderListResponse(orders)
         val json = gson.toJson(response)
         mockWebServer.enqueue(MockResponse().setBody(json))
@@ -864,22 +862,22 @@ suspend fun processOrders(
         
         totalCount += unprocessedOrders.size
         
-        for ((index, orderSummary) in unprocessedOrders.withIndex()) {
+        for ((index, order) in unprocessedOrders.withIndex()) {
             if (!shouldContinue()) break
             
             try {
-                onProgress(processedCount + index + 1, totalCount, orderSummary.id)
+                onProgress(processedCount + index + 1, totalCount, order.id)
                 
                 // Delay between order fetches
                 delay(ApiConfig.ORDER_FETCH_DELAY_MS)
                 
-                val order = apiClient.getOrderDetails(customerId, orderSummary.id)
-                updateProductsFromOrder(order)
-                markOrderAsProcessed(orderSummary.id)
+                val orderDetails = apiClient.getOrderDetails(customerId, order.id)
+                updateProductsFromOrder(orderDetails)
+                markOrderAsProcessed(order.id)
                 
                 processedCount++
             } catch (e: Exception) {
-                Log.e("OrderProcessing", "Error processing order ${orderSummary.id}", e)
+                Log.e("OrderProcessing", "Error processing order ${order.id}", e)
             }
         }
         

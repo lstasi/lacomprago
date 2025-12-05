@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Updated API models to match actual Mercadona API response structure (see fixtures/orders.json)
+- OrderListResponse now uses `next_page` (String?) and `results: List<OrderResult>`
+- OrderProcessingViewModel updated to use OrderDetailsResponse and OrderResult
+- Updated data-models.md and api-integration.md documentation to reflect actual model names
+
+### Removed
+- Deleted unused model files: OrderResponse.kt, OrderItemResponse.kt, OrderSummary.kt
+- Removed obsolete MercadonaProduct, OrderLine, PriceInstructions models from documentation
+
+### Added
+- OrderResult data class for full order data from API
+- OrderDetailsResponse data class for order details with product items
+- OrderDetailItem data class for individual products in orders
+- OrderAddress, PaymentMethod, DeliverySlot, OrderSummaryDetails supporting models
+- Comprehensive unit tests for new API models in ApiModelsTest.kt
+
 ### Fixed
 - Fixed "Customer ID not configured" error when using previously stored tokens
 - AuthViewModel now extracts and saves customer_uuid from existing JWT tokens on app startup (migration for tokens stored before JWT decoding was added)
