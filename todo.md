@@ -55,8 +55,8 @@
 ### 3.1 Documentation Updates
 - [x] Document real Mercadona API endpoints (see [mercadona-api.md](./doc/mercadona-api.md))
 - [x] Create Debug Mode specification (see [debug-mode.md](./doc/debug-mode.md))
-- [ ] Update api-integration.md with real endpoints
-- [ ] Update data-models.md with Mercadona response structures
+- [x] Update api-integration.md with real endpoints
+- [x] Update data-models.md with Mercadona response structures
 
 ### 3.2 API Client Refactor
 - [ ] Update ApiConfig with Mercadona base URL
