@@ -12,4 +12,11 @@
     <color name="success_green">#FF4CAF50</color>
     <color name="error_red">#FFF44336</color>
     <color name="text_secondary">#FF757575</color>
+    
+    <!-- Debug Mode colors -->
+    <color name="method_get">#FF4CAF50</color>
+    <color name="method_post">#FF2196F3</color>
+    <color name="method_put">#FFFFC107</color>
+    <color name="method_delete">#FFF44336</color>
+    <color name="debug_code_background">#FFF5F5F5</color>
 </resources>

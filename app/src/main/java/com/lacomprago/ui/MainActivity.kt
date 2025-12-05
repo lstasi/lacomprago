@@ -6,10 +6,12 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.lacomprago.BuildConfig
 import com.lacomprago.R
 import com.lacomprago.databinding.ActivityMainBinding
 import com.lacomprago.model.AuthState
 import com.lacomprago.storage.TokenStorage
+import com.lacomprago.ui.debug.DebugActivity
 import com.lacomprago.viewmodel.AuthViewModel
 
 /**
@@ -32,6 +34,10 @@ class MainActivity : AppCompatActivity() {
         
         setupListeners()
         observeAuthState()
+
+        if (BuildConfig.DEBUG) {
+            setupDebugAccess()
+        }
     }
     
     private fun setupListeners() {
@@ -127,5 +133,17 @@ class MainActivity : AppCompatActivity() {
     private fun navigateToProductList() {
         val intent = Intent(this, ProductListActivity::class.java)
         startActivity(intent)
+    }
+
+    private fun setupDebugAccess() {
+        val versionLabel = getString(R.string.app_name) + " v" + BuildConfig.VERSION_NAME
+        binding.versionText.apply {
+            text = versionLabel
+            visibility = View.VISIBLE
+            setOnLongClickListener {
+                startActivity(Intent(this@MainActivity, DebugActivity::class.java))
+                true
+            }
+        }
     }
 }

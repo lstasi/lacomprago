@@ -47,10 +47,9 @@
 
 ---
 
-## Phase 3: API Refactor & Validation ⚠️ NEEDS REWORK
+## Phase 3: API Refactor & Validation ✅ COMPLETE
 
-> **Status**: Current implementation uses placeholder API endpoints.
-> Must be updated to use real Mercadona API endpoints.
+> **Status**: Refactored to real Mercadona API endpoints with validation documented and Debug Mode coverage in place.
 
 ### 3.1 Documentation Updates
 - [x] Document real Mercadona API endpoints (see [mercadona-api.md](./doc/mercadona-api.md))
@@ -59,65 +58,65 @@
 - [x] Update data-models.md with Mercadona response structures
 
 ### 3.2 API Client Refactor
-- [ ] Update ApiConfig with Mercadona base URL
-- [ ] Update data models to match Mercadona API responses:
-  - [ ] Customer response model
-  - [ ] Order list response model (with pagination)
-  - [ ] Order details response model
-  - [ ] Cart response model
-  - [ ] Recommendations response model
-- [ ] Update ApiClient methods:
-  - [ ] Add customer_id parameter to all authenticated endpoints
-  - [ ] Update getOrderList() for Mercadona pagination
-  - [ ] Update getOrderDetails() with correct path
-  - [ ] Add getCustomerInfo() for token validation
-  - [ ] Add getCart() method
-  - [ ] Add getRecommendations() method
-- [ ] Add rate limiting (max 60 requests/minute)
-- [ ] Add strict validation:
-  - [ ] Validate token format before requests
-  - [ ] Validate customer_id before requests
-  - [ ] Validate response structure
-  - [ ] Add request cooldown (1-2 seconds between requests)
+- [x] Update ApiConfig with Mercadona base URL
+- [x] Update data models to match Mercadona API responses:
+  - [x] Customer response model
+  - [x] Order list response model (with pagination)
+  - [x] Order details response model
+  - [x] Cart response model
+  - [x] Recommendations response model
+- [x] Update ApiClient methods:
+  - [x] Add customer_id parameter to all authenticated endpoints
+  - [x] Update getOrderList() for Mercadona pagination
+  - [x] Update getOrderDetails() with correct path
+  - [x] Add getCustomerInfo() for token validation
+  - [x] Add getCart() method
+  - [x] Add getRecommendations() method
+- [x] Add rate limiting (max 60 requests/minute)
+- [x] Add strict validation:
+  - [x] Validate token format before requests
+  - [x] Validate customer_id before requests
+  - [x] Validate response structure
+  - [x] Add request cooldown (1-2 seconds between requests)
 
 ### 3.3 Debug Mode Implementation
-- [ ] Create DebugActivity (debug builds only)
-- [ ] Implement token management section:
-  - [ ] Token input/paste field
-  - [ ] Clear token button
-  - [ ] Token status display
-  - [ ] Customer ID input field
-- [ ] Implement endpoint list:
-  - [ ] GET /customers/{id}/ (Customer Info)
-  - [ ] GET /customers/{id}/cart/ (Get Cart)
-  - [ ] GET /customers/{id}/orders/ (List Orders)
-  - [ ] GET /customers/{id}/orders/{orderId}/ (Order Details)
-  - [ ] GET /customers/{id}/recommendations/myregulars/{type}/ (Recommendations)
-  - [ ] PUT /postal-codes/actions/change-pc/ (Set Warehouse)
-- [ ] Implement request configuration:
-  - [ ] Path parameter input
-  - [ ] Query parameter input
-  - [ ] Request body editor (for PUT/POST)
-- [ ] Implement request preview:
-  - [ ] Show full URL
-  - [ ] Show headers
-  - [ ] Show body
-- [ ] Implement response viewer:
-  - [ ] Status code and message
-  - [ ] Response time
-  - [ ] Response headers
-  - [ ] Response body (formatted JSON)
-  - [ ] Copy response button
-- [ ] Add hidden access from main screen (debug builds only)
+- [x] Create DebugActivity (debug builds only)
+- [x] Implement token management section:
+  - [x] Token input/paste field
+  - [x] Clear token button
+  - [x] Token status display
+  - [x] Customer ID input field
+- [x] Implement endpoint list:
+  - [x] GET /customers/{id}/ (Customer Info)
+  - [x] GET /customers/{id}/cart/ (Get Cart)
+  - [x] GET /customers/{id}/orders/ (List Orders)
+  - [x] GET /customers/{id}/orders/{orderId}/ (Order Details)
+  - [x] GET /customers/{id}/recommendations/myregulars/{type}/ (Recommendations)
+  - [x] PUT /postal-codes/actions/change-pc/ (Set Warehouse)
+- [x] Implement request configuration:
+  - [x] Path parameter input
+  - [x] Query parameter input
+  - [x] Request body editor (for PUT/POST)
+- [x] Implement request preview:
+  - [x] Show full URL
+  - [x] Show headers
+  - [x] Show body
+- [x] Implement response viewer:
+  - [x] Status code and message
+  - [x] Response time
+  - [x] Response headers
+  - [x] Response body (formatted JSON)
+  - [x] Copy response button
+- [x] Add hidden access from main screen (debug builds only)
 
 ### 3.4 Endpoint Validation
 Validate each endpoint in Debug Mode before integration:
-- [ ] Customer Info endpoint
-- [ ] List Orders endpoint (with pagination)
-- [ ] Get Order Details endpoint
-- [ ] Get Cart endpoint
-- [ ] Get Recommendations endpoint
-- [ ] Set Warehouse endpoint
+- [x] Customer Info endpoint
+- [x] List Orders endpoint (with pagination)
+- [x] Get Order Details endpoint
+- [x] Get Cart endpoint
+- [x] Get Recommendations endpoint
+- [x] Set Warehouse endpoint
 
 ---
 

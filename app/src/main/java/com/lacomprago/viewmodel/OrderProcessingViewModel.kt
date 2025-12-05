@@ -173,8 +173,8 @@ class OrderProcessingViewModel(
         // Parse order date from OrderResult (use startDate or endDate)
         val orderTimestamp = parseOrderDate(orderResult.startDate)
         
-        // Get items from order details
-        val items = orderDetails.items
+        // Get lines from order details (Mercadona order structure)
+        val items = orderDetails.lines
         if (items.isNullOrEmpty()) {
             Log.w(TAG, "Order ${orderResult.id} has no items")
             return@withContext 0
@@ -184,12 +184,14 @@ class OrderProcessingViewModel(
         
         // Update each product from the order
         for (item in items) {
-            val productId = item.productId ?: continue
-            val productName = item.productName ?: "Unknown Product"
-            val quantity = item.quantity ?: 1
-            
+            val product = item.product ?: continue
+            val productId = product.id
+            val productName = product.displayName ?: "Unknown Product"
+            val quantity = item.quantity ?: 1.0
+            val category = product.categories?.firstOrNull()?.name
+
             val existingProduct = productsMap[productId]
-            
+
             val updatedProduct = if (existingProduct != null) {
                 // Update existing product
                 existingProduct.copy(
@@ -204,11 +206,11 @@ class OrderProcessingViewModel(
                     name = productName,
                     frequency = 1,
                     lastPurchase = orderTimestamp,
-                    category = item.category,
-                    totalQuantity = quantity.toDouble()
+                    category = category,
+                    totalQuantity = quantity
                 )
             }
-            
+
             productsMap[productId] = updatedProduct
             updatedCount++
         }

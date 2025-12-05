@@ -1,6 +1,8 @@
 package com.lacomprago.data.api
 
 import com.lacomprago.storage.TokenStorage
+import com.lacomprago.data.api.ApiValidation
+import com.lacomprago.data.api.ApiException
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -17,9 +19,14 @@ class TokenInterceptor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
         val token = tokenStorage.getToken()
+        val isTokenValid = try {
+            ApiValidation.validateToken(token).isValid
+        } catch (e: ApiException) {
+            false
+        }
         
         // Build the request, adding token if available
-        val request = if (token != null) {
+        val request = if (token != null && isTokenValid) {
             original.newBuilder()
                 .header(AUTHORIZATION_HEADER, "$BEARER_PREFIX$token")
                 .build()

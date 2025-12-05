@@ -27,6 +27,13 @@
             android:name=".ui.ProductListActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity" />
+        
+        <!-- Debug Activity - Only accessible in debug builds -->
+        <activity
+            android:name=".ui.debug.DebugActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity"
+            android:label="@string/debug_title" />
     </application>
 
 </manifest>

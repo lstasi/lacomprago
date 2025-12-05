@@ -16,8 +16,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // API Configuration
-        buildConfigField("String", "API_BASE_URL", "\"${project.findProperty("API_BASE_URL") ?: "https://api.supermarket.example.com/"}\"")
+        // API Configuration - Mercadona API
+        // Mercadona API base URL (includes trailing /api/)
+        buildConfigField("String", "API_BASE_URL", "\"${project.findProperty("API_BASE_URL") ?: "https://tienda.mercadona.es/api/"}\"")
     }
 
     buildTypes {

@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Completed Phase 3 (API Refactor & Validation) documentation: Mercadona endpoints, models, rate limiting, and Debug Mode validation marked done in todo.md and README.md
+- Default API base URL now points to https://tienda.mercadona.es/api/ with client paths aligned (no duplicate /api/ segments)
+- Rate limiter spacing increased to 1.5 seconds between sequential requests to respect 60 req/min guidance
+- TokenInterceptor now skips adding Authorization when token format validation fails, protecting upstream calls
 - Updated API models to match actual Mercadona API response structure (see fixtures/orders.json)
 - OrderListResponse now uses `next_page` (String?) and `results: List<OrderResult>`
 - OrderProcessingViewModel updated to use OrderDetailsResponse and OrderResult

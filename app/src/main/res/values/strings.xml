@@ -46,4 +46,28 @@
     <!-- Actions -->
     <string name="retry">Retry</string>
     <string name="product_count">%1$d products</string>
+    
+    <!-- Debug Mode -->
+    <string name="debug_title">API Debug Mode</string>
+    <string name="debug_token_management">Token Management</string>
+    <string name="debug_token_status_none">Token Status: None</string>
+    <string name="debug_token_status_stored">Token Status: Stored</string>
+    <string name="debug_token_status_invalid">Token Status: Invalid - %1$s</string>
+    <string name="debug_token_hint">Paste API Token</string>
+    <string name="debug_save_token">Save Token</string>
+    <string name="debug_clear_token">Clear Token</string>
+    <string name="debug_customer_id_hint">Customer ID</string>
+    <string name="debug_save_customer_id">Save ID</string>
+    <string name="debug_validate_token">Validate</string>
+    <string name="debug_available_endpoints">Available Endpoints</string>
+    <string name="debug_request_config">Request Configuration</string>
+    <string name="debug_path_params">Path Parameters</string>
+    <string name="debug_query_params">Query Parameters (optional)</string>
+    <string name="debug_request_body">Request Body (JSON)</string>
+    <string name="debug_send_request">Send Request</string>
+    <string name="debug_response">Response</string>
+    <string name="debug_copy">Copy</string>
+    <string name="debug_response_status">Status: %1$d %2$s</string>
+    <string name="debug_response_duration">Response time: %1$dms</string>
+    <string name="debug_response_copied">Response copied to clipboard</string>
 </resources>
