@@ -43,7 +43,8 @@ class TokenValidatorTest {
     
     @Test
     fun `validate returns Invalid for token with special characters`() {
-        val invalidToken = "abcdefghijklmnopqrst!@#$"
+        // Token must be at least 32 characters to pass the length check first
+        val invalidToken = "abcdefghijklmnopqrstuvwxyz!@#$%^"
         val result = validator.validate(invalidToken)
         
         assertTrue(result is TokenValidationResult.Invalid)

@@ -61,6 +61,25 @@
                         android:layout_marginBottom="8dp" />
 
                     <TextView
+                        android:id="@+id/lastOrderDateText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/orders_last_date"
+                        android:textSize="14sp"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:layout_marginBottom="8dp"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/downloadedOrdersText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/orders_downloaded"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
                         android:id="@+id/processedOrdersText"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -146,27 +165,37 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="To avoid API rate limiting, only one order is processed per sync.\n\nUse 'Refresh' to fetch latest orders from API.\nUse 'Process Next Order' to process one order at a time."
+                android:text="@string/orders_info_text"
                 android:textSize="14sp"
                 android:textColor="?android:attr/textColorSecondary"
                 android:layout_marginBottom="24dp" />
 
-            <!-- Refresh Button -->
+            <!-- Get List Orders Button -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/refreshButton"
+                android:id="@+id/getListOrdersButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/orders_refresh"
+                android:text="@string/orders_get_list"
+                android:layout_marginBottom="12dp"
+                style="@style/Widget.Material3.Button" />
+
+            <!-- Get Orders Button (Download one order) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/getOrdersButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/orders_get_orders"
                 android:layout_marginBottom="12dp"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
 
-            <!-- Process Next Order Button (always visible) -->
+            <!-- Process Order Button -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/processNextButton"
+                android:id="@+id/processOrderButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="@string/orders_process_order"
                 android:layout_marginBottom="12dp"
-                style="@style/Widget.Material3.Button" />
+                style="@style/Widget.Material3.Button.OutlinedButton" />
 
             <!-- Clear Orders Button -->
             <com.google.android.material.button.MaterialButton
@@ -174,7 +203,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/orders_clear"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
+                style="@style/Widget.Material3.Button.TextButton" />
 
         </LinearLayout>
 

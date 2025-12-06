@@ -2,6 +2,8 @@ package com.lacomprago.ui
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.lacomprago.R
 import com.lacomprago.data.api.ApiClient
@@ -13,8 +15,12 @@ import com.lacomprago.viewmodel.OrderListViewModel
 
 /**
  * Activity for displaying order list and processing status.
- * Shows total orders, processed count, and remaining count.
- * Allows refreshing from API or processing next order.
+ * Shows total orders, downloaded count, processed count, and product statistics.
+ * 
+ * Features three separate actions:
+ * - Get List Orders: Fetch order list from API
+ * - Get Orders: Download one order's details
+ * - Process Order: Process one downloaded order to extract products
  */
 class OrderListActivity : AppCompatActivity() {
     
@@ -44,14 +50,19 @@ class OrderListActivity : AppCompatActivity() {
     }
     
     private fun setupListeners() {
-        // Refresh button - fetch from API
-        binding.refreshButton.setOnClickListener {
-            viewModel.refreshOrderList()
+        // Get List Orders button - fetch order list from API
+        binding.getListOrdersButton.setOnClickListener {
+            viewModel.fetchOrderListFromApi()
         }
         
-        // Process next order button
-        binding.processNextButton.setOnClickListener {
-            showOrderProcessingDialog()
+        // Get Orders button - download one order
+        binding.getOrdersButton.setOnClickListener {
+            viewModel.downloadNextOrder()
+        }
+        
+        // Process Order button - process one downloaded order
+        binding.processOrderButton.setOnClickListener {
+            viewModel.processNextOrder()
         }
         
         // Clear orders button
@@ -61,7 +72,7 @@ class OrderListActivity : AppCompatActivity() {
         
         // Retry button (error state)
         binding.retryButton.setOnClickListener {
-            viewModel.loadOrderList(fromCache = true)
+            viewModel.loadFromLocalCache()
         }
     }
     
@@ -71,6 +82,7 @@ class OrderListActivity : AppCompatActivity() {
                 is OrderListState.Loading -> showLoading()
                 is OrderListState.Success -> showSuccess(state)
                 is OrderListState.Error -> showError(state.message)
+                null -> showLoading()
             }
         }
     }
@@ -88,8 +100,17 @@ class OrderListActivity : AppCompatActivity() {
         
         // Update order statistics
         binding.totalOrdersText.text = getString(R.string.orders_total, state.totalOrders)
+        binding.downloadedOrdersText.text = getString(R.string.orders_downloaded, state.downloadedCount)
         binding.processedOrdersText.text = getString(R.string.orders_processed, state.processedCount)
         binding.remainingOrdersText.text = getString(R.string.orders_remaining, state.unprocessedCount)
+        
+        // Show last order date if available
+        if (state.lastOrderDate != null) {
+            binding.lastOrderDateText.text = getString(R.string.orders_last_date, state.lastOrderDate)
+            binding.lastOrderDateText.visibility = View.VISIBLE
+        } else {
+            binding.lastOrderDateText.visibility = View.GONE
+        }
         
         // Show cache status if loaded from cache
         if (state.fromCache) {
@@ -114,11 +135,29 @@ class OrderListActivity : AppCompatActivity() {
             binding.productStatsCard.visibility = View.GONE
         }
         
-        // Update button text based on whether there are unprocessed orders
-        if (state.unprocessedCount > 0) {
-            binding.processNextButton.text = getString(R.string.orders_process_next)
+        // Enable/disable buttons based on state
+        val hasOrderList = state.totalOrders > 0
+        val hasUndownloadedOrders = state.totalOrders > state.downloadedCount
+        val hasUnprocessedOrders = state.unprocessedCount > 0
+        
+        // Get Orders button enabled only if there are orders to download
+        binding.getOrdersButton.isEnabled = hasUndownloadedOrders
+        if (hasUndownloadedOrders) {
+            binding.getOrdersButton.text = getString(R.string.orders_get_orders)
+        } else if (hasOrderList) {
+            binding.getOrdersButton.text = "All Orders Downloaded"
         } else {
-            binding.processNextButton.text = getString(R.string.orders_reprocess)
+            binding.getOrdersButton.text = getString(R.string.orders_get_orders)
+        }
+        
+        // Process Order button enabled only if there are downloaded but unprocessed orders
+        binding.processOrderButton.isEnabled = hasUnprocessedOrders
+        if (hasUnprocessedOrders) {
+            binding.processOrderButton.text = getString(R.string.orders_process_order)
+        } else if (state.downloadedCount > 0) {
+            binding.processOrderButton.text = "All Orders Processed"
+        } else {
+            binding.processOrderButton.text = getString(R.string.orders_process_order)
         }
     }
     
@@ -129,38 +168,32 @@ class OrderListActivity : AppCompatActivity() {
         binding.errorText.text = message
     }
     
-    private fun showOrderProcessingDialog() {
-        val dialog = OrderProcessingDialogFragment.newInstance()
-        dialog.setOnProcessingCompleteListener {
-            // Reload order list from cache to update counts
-            viewModel.loadOrderList(fromCache = true)
-        }
-        dialog.show(supportFragmentManager, OrderProcessingDialogFragment.TAG)
-    }
-    
     private fun showClearOrdersConfirmation() {
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        AlertDialog.Builder(this)
             .setTitle(R.string.orders_clear_confirm_title)
             .setMessage(R.string.orders_clear_confirm_message)
             .setPositiveButton(android.R.string.ok) { _, _ ->
-                clearOrders()
+                clearAllData()
             }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }
     
-    private fun clearOrders() {
-        val jsonStorage = com.lacomprago.storage.JsonStorage(applicationContext)
+    private fun clearAllData() {
+        val jsonStorage = JsonStorage(applicationContext)
         jsonStorage.deleteCachedOrderList()
+        jsonStorage.deleteDownloadedOrders()
+        jsonStorage.deleteProcessedOrders()
+        jsonStorage.deleteProductList()
         
         // Show toast
-        android.widget.Toast.makeText(
+        Toast.makeText(
             this,
             R.string.orders_cleared,
-            android.widget.Toast.LENGTH_SHORT
+            Toast.LENGTH_SHORT
         ).show()
         
-        // Reload from cache to show error state (no cache)
-        viewModel.loadOrderList(fromCache = true)
+        // Reload from cache to show empty state
+        viewModel.loadFromLocalCache()
     }
 }
