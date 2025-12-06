@@ -54,6 +54,11 @@ class OrderListActivity : AppCompatActivity() {
             showOrderProcessingDialog()
         }
         
+        // Clear orders button
+        binding.clearOrdersButton.setOnClickListener {
+            showClearOrdersConfirmation()
+        }
+        
         // Retry button (error state)
         binding.retryButton.setOnClickListener {
             viewModel.loadOrderList(fromCache = true)
@@ -81,25 +86,39 @@ class OrderListActivity : AppCompatActivity() {
         binding.contentScrollView.visibility = View.VISIBLE
         binding.errorLayout.visibility = View.GONE
         
-        // Update statistics
+        // Update order statistics
         binding.totalOrdersText.text = getString(R.string.orders_total, state.totalOrders)
         binding.processedOrdersText.text = getString(R.string.orders_processed, state.processedCount)
         binding.remainingOrdersText.text = getString(R.string.orders_remaining, state.unprocessedCount)
         
         // Show cache status if loaded from cache
         if (state.fromCache) {
-            binding.cacheStatusText.visibility = View.VISIBLE
+            if (state.totalOrders == 0) {
+                binding.cacheStatusText.text = getString(R.string.orders_no_cache)
+                binding.cacheStatusText.visibility = View.VISIBLE
+            } else {
+                binding.cacheStatusText.text = getString(R.string.orders_from_cache)
+                binding.cacheStatusText.visibility = View.VISIBLE
+            }
         } else {
             binding.cacheStatusText.visibility = View.GONE
         }
         
-        // Show/hide process button and all-processed message
-        if (state.unprocessedCount > 0) {
-            binding.processNextButton.visibility = View.VISIBLE
-            binding.allProcessedText.visibility = View.GONE
+        // Update product statistics
+        if (state.totalProducts > 0) {
+            binding.productStatsCard.visibility = View.VISIBLE
+            binding.totalProductsText.text = getString(R.string.total_products, state.totalProducts)
+            binding.totalQuantityText.text = getString(R.string.total_quantity, state.totalQuantity)
+            binding.avgFrequencyText.text = getString(R.string.avg_frequency, state.avgFrequency)
         } else {
-            binding.processNextButton.visibility = View.GONE
-            binding.allProcessedText.visibility = View.VISIBLE
+            binding.productStatsCard.visibility = View.GONE
+        }
+        
+        // Update button text based on whether there are unprocessed orders
+        if (state.unprocessedCount > 0) {
+            binding.processNextButton.text = getString(R.string.orders_process_next)
+        } else {
+            binding.processNextButton.text = getString(R.string.orders_reprocess)
         }
     }
     
@@ -117,5 +136,31 @@ class OrderListActivity : AppCompatActivity() {
             viewModel.loadOrderList(fromCache = true)
         }
         dialog.show(supportFragmentManager, OrderProcessingDialogFragment.TAG)
+    }
+    
+    private fun showClearOrdersConfirmation() {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(R.string.orders_clear_confirm_title)
+            .setMessage(R.string.orders_clear_confirm_message)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                clearOrders()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+    
+    private fun clearOrders() {
+        val jsonStorage = com.lacomprago.storage.JsonStorage(applicationContext)
+        jsonStorage.deleteCachedOrderList()
+        
+        // Show toast
+        android.widget.Toast.makeText(
+            this,
+            R.string.orders_cleared,
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+        
+        // Reload from cache to show error state (no cache)
+        viewModel.loadOrderList(fromCache = true)
     }
 }

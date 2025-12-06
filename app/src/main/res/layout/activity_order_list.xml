@@ -40,7 +40,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="16dp"
                 app:cardElevation="2dp"
                 app:cardCornerRadius="8dp">
 
@@ -91,6 +91,57 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Product Statistics Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/productStatsCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                app:cardElevation="2dp"
+                app:cardCornerRadius="8dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/product_stats_title"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/totalProductsText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/totalQuantityText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/avgFrequencyText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorPrimary" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Information Text -->
             <TextView
                 android:layout_width="match_parent"
@@ -109,25 +160,21 @@
                 android:layout_marginBottom="12dp"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
 
-            <!-- Process Next Order Button -->
+            <!-- Process Next Order Button (always visible) -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/processNextButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/orders_process_next"
+                android:layout_marginBottom="12dp"
                 style="@style/Widget.Material3.Button" />
 
-            <!-- All Processed Message -->
-            <TextView
-                android:id="@+id/allProcessedText"
+            <!-- Clear Orders Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/clearOrdersButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/orders_all_processed"
-                android:textSize="16sp"
-                android:textColor="@color/success_green"
-                android:gravity="center"
-                android:padding="24dp"
-                android:visibility="gone" />
+                android:text="@string/orders_clear"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
 
         </LinearLayout>
 

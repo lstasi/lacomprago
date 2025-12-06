@@ -45,24 +45,10 @@ class ProductListActivity : AppCompatActivity() {
     }
     
     private fun setupListeners() {
-        // Refresh FAB click - shows order processing dialog
-        binding.refreshFab.setOnClickListener {
-            showOrderProcessingDialog()
-        }
-        
         // Retry button click (in error state)
         binding.retryButton.setOnClickListener {
             viewModel.loadProducts()
         }
-    }
-    
-    private fun showOrderProcessingDialog() {
-        val dialog = OrderProcessingDialogFragment.newInstance()
-        dialog.setOnProcessingCompleteListener {
-            // Refresh the product list after processing completes
-            viewModel.refreshProducts()
-        }
-        dialog.show(supportFragmentManager, OrderProcessingDialogFragment.TAG)
     }
     
     private fun observeProductListState() {
@@ -93,7 +79,6 @@ class ProductListActivity : AppCompatActivity() {
         binding.emptyStateLayout.visibility = View.GONE
         binding.errorStateLayout.visibility = View.GONE
         binding.productCountText.visibility = View.GONE
-        binding.refreshFab.isEnabled = false
     }
     
     private fun showProducts(products: List<Product>) {
@@ -101,7 +86,6 @@ class ProductListActivity : AppCompatActivity() {
         binding.productRecyclerView.visibility = View.VISIBLE
         binding.emptyStateLayout.visibility = View.GONE
         binding.errorStateLayout.visibility = View.GONE
-        binding.refreshFab.isEnabled = true
         
         adapter.submitList(products)
     }
@@ -112,7 +96,6 @@ class ProductListActivity : AppCompatActivity() {
         binding.emptyStateLayout.visibility = View.VISIBLE
         binding.errorStateLayout.visibility = View.GONE
         binding.productCountText.visibility = View.GONE
-        binding.refreshFab.isEnabled = true
     }
     
     private fun showError(message: String) {
@@ -122,6 +105,5 @@ class ProductListActivity : AppCompatActivity() {
         binding.errorStateLayout.visibility = View.VISIBLE
         binding.productCountText.visibility = View.GONE
         binding.errorText.text = message
-        binding.refreshFab.isEnabled = true
     }
 }

@@ -15,12 +15,18 @@ sealed class OrderListState {
      * @property processedCount Number of orders already processed
      * @property unprocessedCount Number of orders remaining to process
      * @property fromCache Whether the data was loaded from cache
+     * @property totalProducts Total number of unique products stored
+     * @property totalQuantity Total quantity of all products
+     * @property avgFrequency Average frequency of products
      */
     data class Success(
         val totalOrders: Int,
         val processedCount: Int,
         val unprocessedCount: Int,
-        val fromCache: Boolean
+        val fromCache: Boolean,
+        val totalProducts: Int,
+        val totalQuantity: Double,
+        val avgFrequency: Double
     ) : OrderListState()
     
     /**

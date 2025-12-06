@@ -55,6 +55,11 @@ class OrderListViewModel(
                         Log.d(TAG, "Loaded ${cachedOrderList.orders.size} orders from cache")
                         updateStateWithOrderList(cachedOrderList.orders, fromCache = true)
                         return@launch
+                    } else {
+                        // No cache exists, show success with 0 orders
+                        Log.d(TAG, "No cached orders found")
+                        updateStateWithOrderList(emptyList(), fromCache = true)
+                        return@launch
                     }
                 }
                 
@@ -104,12 +109,25 @@ class OrderListViewModel(
             val processedCount = orders.count { it.id.toString() in processedOrderIds }
             val unprocessedCount = totalOrders - processedCount
             
+            // Calculate product statistics
+            val productList = jsonStorage.loadProductList()
+            val totalProducts = productList?.products?.size ?: 0
+            val totalQuantity = productList?.products?.sumOf { it.totalQuantity } ?: 0.0
+            val avgFrequency = if (totalProducts > 0) {
+                productList?.products?.map { it.frequency }?.average() ?: 0.0
+            } else {
+                0.0
+            }
+            
             _orderListState.postValue(
                 OrderListState.Success(
                     totalOrders = totalOrders,
                     processedCount = processedCount,
                     unprocessedCount = unprocessedCount,
-                    fromCache = fromCache
+                    fromCache = fromCache,
+                    totalProducts = totalProducts,
+                    totalQuantity = totalQuantity,
+                    avgFrequency = avgFrequency
                 )
             )
         }

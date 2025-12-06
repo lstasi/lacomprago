@@ -20,9 +20,20 @@
     <string name="orders_processed">Processed: %1$d</string>
     <string name="orders_remaining">Remaining: %1$d</string>
     <string name="orders_from_cache">(Loaded from cache)</string>
+    <string name="orders_no_cache">(No cache - please refresh from API)</string>
     <string name="orders_refresh">Refresh from API</string>
     <string name="orders_process_next">Process Next Order</string>
+    <string name="orders_reprocess">Reprocess Order</string>
     <string name="orders_all_processed">All orders processed!</string>
+    <string name="orders_clear">Clear Order Cache</string>
+    <string name="orders_clear_confirm_title">Clear Order Cache?</string>
+    <string name="orders_clear_confirm_message">This will clear the cached order list. You\'ll need to refresh from API to see orders again.</string>
+    <string name="orders_cleared">Order cache cleared</string>
+    <string name="product_stats_title">Product Statistics</string>
+    <string name="total_products">Total Products: %1$d</string>
+    <string name="total_quantity">Total Quantity: %1$.1f</string>
+    <string name="avg_frequency">Average Frequency: %1$.1f</string>
+    <string name="no_products_yet">No products processed yet</string>
     <string name="orders_loading">Loading orders…</string>
     <string name="orders_error">Error loading orders</string>
     
@@ -42,7 +53,7 @@
     <string name="remaining_orders_format">%1$d orders remaining</string>
     <string name="processing_complete">Order processed!\n%1$d products updated.</string>
     <string name="processing_complete_remaining">Order processed!\n%1$d products updated.\n%2$d orders remaining.</string>
-    <string name="processing_complete_none">No new orders to process.</string>
+    <string name="processing_complete_none">Order processed successfully!\nNo new products found.</string>
     <string name="processing_cancelled">Processing cancelled.</string>
     <string name="processing_error">Error: %1$s</string>
     
