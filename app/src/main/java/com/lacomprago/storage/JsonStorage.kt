@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.lacomprago.model.CachedOrderList
+import com.lacomprago.model.DownloadedOrders
 import com.lacomprago.model.ProcessedOrders
 import com.lacomprago.model.ProductList
 import java.io.FileNotFoundException
@@ -200,11 +201,72 @@ class JsonStorage(private val context: Context) {
         return context.deleteFile(CACHED_ORDERS_FILE)
     }
     
+    /**
+     * Save downloaded orders to downloaded_orders.json.
+     *
+     * @param downloadedOrders The downloaded orders to save
+     * @throws JsonStorageException if saving fails
+     */
+    fun saveDownloadedOrders(downloadedOrders: DownloadedOrders) {
+        try {
+            val json = gson.toJson(downloadedOrders)
+            context.openFileOutput(DOWNLOADED_ORDERS_FILE, Context.MODE_PRIVATE).use { outputStream ->
+                outputStream.write(json.toByteArray())
+            }
+        } catch (e: IOException) {
+            Log.e(TAG, "Error saving downloaded orders", e)
+            throw JsonStorageException("Failed to save downloaded orders: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Load downloaded orders from downloaded_orders.json.
+     *
+     * @return The loaded downloaded orders, or an empty DownloadedOrders if the file doesn't exist
+     * @throws JsonStorageException if loading fails due to parsing or I/O errors
+     */
+    fun loadDownloadedOrders(): DownloadedOrders {
+        return try {
+            context.openFileInput(DOWNLOADED_ORDERS_FILE).use { inputStream ->
+                val json = inputStream.bufferedReader().use { it.readText() }
+                gson.fromJson(json, DownloadedOrders::class.java)
+            }
+        } catch (e: FileNotFoundException) {
+            Log.d(TAG, "Downloaded orders file not found, returning empty")
+            DownloadedOrders()
+        } catch (e: JsonSyntaxException) {
+            Log.e(TAG, "Error parsing downloaded orders JSON", e)
+            throw JsonStorageException("Failed to parse downloaded orders file: ${e.message}", e)
+        } catch (e: IOException) {
+            Log.e(TAG, "Error reading downloaded orders file", e)
+            throw JsonStorageException("Failed to read downloaded orders file: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Check if the downloaded orders file exists.
+     *
+     * @return true if the file exists, false otherwise
+     */
+    fun hasDownloadedOrders(): Boolean {
+        return context.getFileStreamPath(DOWNLOADED_ORDERS_FILE).exists()
+    }
+    
+    /**
+     * Delete the downloaded orders file.
+     *
+     * @return true if the file was deleted, false otherwise
+     */
+    fun deleteDownloadedOrders(): Boolean {
+        return context.deleteFile(DOWNLOADED_ORDERS_FILE)
+    }
+    
     companion object {
         private const val TAG = "JsonStorage"
         const val PRODUCTS_FILE = "products.json"
         const val PROCESSED_ORDERS_FILE = "processed_orders.json"
         const val CACHED_ORDERS_FILE = "cached_orders.json"
+        const val DOWNLOADED_ORDERS_FILE = "downloaded_orders.json"
     }
 }
 
