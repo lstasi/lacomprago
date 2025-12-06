@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import com.lacomprago.model.CachedOrderList
 import com.lacomprago.model.ProcessedOrders
 import com.lacomprago.model.ProductList
 import java.io.FileNotFoundException
@@ -139,10 +140,71 @@ class JsonStorage(private val context: Context) {
         return context.getFileStreamPath(PROCESSED_ORDERS_FILE).exists()
     }
     
+    /**
+     * Save the cached order list to cached_orders.json.
+     *
+     * @param cachedOrderList The cached order list to save
+     * @throws JsonStorageException if saving fails
+     */
+    fun saveCachedOrderList(cachedOrderList: CachedOrderList) {
+        try {
+            val json = gson.toJson(cachedOrderList)
+            context.openFileOutput(CACHED_ORDERS_FILE, Context.MODE_PRIVATE).use { outputStream ->
+                outputStream.write(json.toByteArray())
+            }
+        } catch (e: IOException) {
+            Log.e(TAG, "Error saving cached order list", e)
+            throw JsonStorageException("Failed to save cached order list: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Load cached order list from cached_orders.json.
+     *
+     * @return The loaded cached order list, or null if the file doesn't exist
+     * @throws JsonStorageException if loading fails due to parsing or I/O errors
+     */
+    fun loadCachedOrderList(): CachedOrderList? {
+        return try {
+            context.openFileInput(CACHED_ORDERS_FILE).use { inputStream ->
+                val json = inputStream.bufferedReader().use { it.readText() }
+                gson.fromJson(json, CachedOrderList::class.java)
+            }
+        } catch (e: FileNotFoundException) {
+            Log.d(TAG, "Cached order list file not found")
+            null
+        } catch (e: JsonSyntaxException) {
+            Log.e(TAG, "Error parsing cached order list JSON", e)
+            throw JsonStorageException("Failed to parse cached order list file: ${e.message}", e)
+        } catch (e: IOException) {
+            Log.e(TAG, "Error reading cached order list file", e)
+            throw JsonStorageException("Failed to read cached order list file: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Check if the cached order list file exists.
+     *
+     * @return true if the file exists, false otherwise
+     */
+    fun hasCachedOrderList(): Boolean {
+        return context.getFileStreamPath(CACHED_ORDERS_FILE).exists()
+    }
+    
+    /**
+     * Delete the cached order list file.
+     *
+     * @return true if the file was deleted, false otherwise
+     */
+    fun deleteCachedOrderList(): Boolean {
+        return context.deleteFile(CACHED_ORDERS_FILE)
+    }
+    
     companion object {
         private const val TAG = "JsonStorage"
         const val PRODUCTS_FILE = "products.json"
         const val PROCESSED_ORDERS_FILE = "processed_orders.json"
+        const val CACHED_ORDERS_FILE = "cached_orders.json"
     }
 }
 

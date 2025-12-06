@@ -28,6 +28,12 @@
             android:exported="false"
             android:parentActivityName=".ui.MainActivity" />
         
+        <!-- Order List Activity -->
+        <activity
+            android:name=".ui.OrderListActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        
         <!-- Debug Activity - Only accessible in debug builds -->
         <activity
             android:name=".ui.debug.DebugActivity"

@@ -120,7 +120,7 @@ Validate each endpoint in Debug Mode before integration:
 
 ---
 
-## Phase 4: Token Authentication ✅ COMPLETE (Needs validation)
+## Phase 4: Token Authentication ✅ COMPLETE
 
 - [x] Create token input UI screen
 - [x] Implement EncryptedSharedPreferences for token storage
@@ -131,10 +131,10 @@ Validate each endpoint in Debug Mode before integration:
 - [x] Implement token clear functionality
 
 ### 4.1 Token Validation Updates (After Debug Mode)
-- [ ] Update token validation to use Customer Info endpoint
-- [ ] Store customer_id along with token
-- [ ] Validate token on app start
-- [ ] Test with real Mercadona token in Debug Mode
+- [x] Update token validation to use Customer Info endpoint
+- [x] Store customer_id along with token
+- [x] Validate token on app start
+- [x] Test with real Mercadona token in Debug Mode
 
 ---
 

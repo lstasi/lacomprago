@@ -12,6 +12,19 @@
     <string name="token_validating">Validating token…</string>
     <string name="token_stored">Token stored. You can now use the app.</string>
     <string name="continue_to_products">Continue to Products</string>
+    <string name="view_orders">View Orders</string>
+    
+    <!-- Order List Screen -->
+    <string name="orders_title">Orders</string>
+    <string name="orders_total">Total Orders: %1$d</string>
+    <string name="orders_processed">Processed: %1$d</string>
+    <string name="orders_remaining">Remaining: %1$d</string>
+    <string name="orders_from_cache">(Loaded from cache)</string>
+    <string name="orders_refresh">Refresh from API</string>
+    <string name="orders_process_next">Process Next Order</string>
+    <string name="orders_all_processed">All orders processed!</string>
+    <string name="orders_loading">Loading orders…</string>
+    <string name="orders_error">Error loading orders</string>
     
     <!-- Product List Screen -->
     <string name="products_title">Products</string>

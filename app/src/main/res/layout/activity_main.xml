@@ -89,6 +89,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp" />
 
+    <!-- View Orders Button (shown only when token is valid) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/viewOrdersButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/view_orders"
+        android:visibility="gone"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        app:layout_constraintTop_toBottomOf="@id/continueButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="8dp" />
+
     <!-- Progress Indicator -->
     <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/progressIndicator"
@@ -96,7 +109,7 @@
         android:layout_height="wrap_content"
         android:visibility="gone"
         android:indeterminate="true"
-        app:layout_constraintTop_toBottomOf="@id/continueButton"
+        app:layout_constraintTop_toBottomOf="@id/viewOrdersButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="24dp" />

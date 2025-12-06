@@ -71,6 +71,11 @@ class MainActivity : AppCompatActivity() {
         binding.continueButton.setOnClickListener {
             navigateToProductList()
         }
+        
+        // View orders button click
+        binding.viewOrdersButton.setOnClickListener {
+            navigateToOrderList()
+        }
     }
     
     private fun observeAuthState() {
@@ -114,6 +119,7 @@ class MainActivity : AppCompatActivity() {
             submitButton.visibility = View.GONE
             clearTokenButton.visibility = View.VISIBLE
             continueButton.visibility = View.VISIBLE
+            viewOrdersButton.visibility = View.VISIBLE
             progressIndicator.visibility = View.GONE
             statusText.visibility = View.VISIBLE
             statusText.text = getString(R.string.token_stored)
@@ -134,6 +140,11 @@ class MainActivity : AppCompatActivity() {
     
     private fun navigateToProductList() {
         val intent = Intent(this, ProductListActivity::class.java)
+        startActivity(intent)
+    }
+    
+    private fun navigateToOrderList() {
+        val intent = Intent(this, OrderListActivity::class.java)
         startActivity(intent)
     }
 

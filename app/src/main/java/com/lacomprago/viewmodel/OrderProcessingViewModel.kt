@@ -9,6 +9,7 @@ import com.lacomprago.data.api.ApiClient
 import com.lacomprago.data.api.ApiException
 import com.lacomprago.data.api.model.OrderDetailsResponse
 import com.lacomprago.data.api.model.OrderResult
+import com.lacomprago.model.CachedOrderList
 import com.lacomprago.model.OrderProcessingState
 import com.lacomprago.model.ProcessedOrders
 import com.lacomprago.model.Product
@@ -101,19 +102,36 @@ class OrderProcessingViewModel(
         // Step 2: Set state to fetching orders
         _processingState.value = OrderProcessingState.FetchingOrders
         
-        // Step 3: Fetch order list from API
-        val orderListResponse = apiClient.getOrderList(customerId)
-        val orderList = orderListResponse.results
-        Log.d(TAG, "Fetched ${orderList.size} orders from API")
+        // Step 3: Try to get orders from cache first, then API if needed
+        val orderList = withContext(Dispatchers.IO) {
+            val cachedOrderList = jsonStorage.loadCachedOrderList()
+            if (cachedOrderList != null) {
+                Log.d(TAG, "Using cached order list with ${cachedOrderList.orders.size} orders")
+                cachedOrderList.orders
+            } else {
+                Log.d(TAG, "No cached orders, fetching from API")
+                val orderListResponse = apiClient.getOrderList(customerId)
+                val orders = orderListResponse.results
+                
+                // Cache the response for future use
+                val newCachedOrderList = CachedOrderList(orders = orders)
+                jsonStorage.saveCachedOrderList(newCachedOrderList)
+                
+                Log.d(TAG, "Fetched and cached ${orders.size} orders from API")
+                orders
+            }
+        }
         
-        // Step 3: Load processed orders
+        Log.d(TAG, "Processing with ${orderList.size} total orders")
+        
+        // Step 4: Load processed orders
         val processedOrders = withContext(Dispatchers.IO) {
             jsonStorage.loadProcessedOrders()
         }
         val processedOrderIds = processedOrders.processedOrderIds.toSet()
         Log.d(TAG, "Already processed ${processedOrderIds.size} orders")
         
-        // Step 4: Filter out already processed orders
+        // Step 5: Filter out already processed orders
         val unprocessedOrders = orderList.filter { it.id.toString() !in processedOrderIds }
         Log.d(TAG, "Found ${unprocessedOrders.size} unprocessed orders")
         
@@ -125,7 +143,7 @@ class OrderProcessingViewModel(
             return
         }
         
-        // Step 5: Process only the FIRST unprocessed order
+        // Step 6: Process only the FIRST unprocessed order
         val orderToProcess = unprocessedOrders.first()
         val remainingAfterThis = unprocessedOrders.size - 1
         
@@ -146,7 +164,7 @@ class OrderProcessingViewModel(
         
         Log.d(TAG, "Processed order ${orderToProcess.id}, updated $updatedCount products, $remainingAfterThis remaining")
         
-        // Step 6: Complete
+        // Step 7: Complete
         _processingState.value = OrderProcessingState.Completed(
             updatedProductCount = updatedCount,
             remainingOrders = remainingAfterThis
