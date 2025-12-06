@@ -252,7 +252,7 @@ class OrderListViewModel(
                     
                     // Find the order result to get the date
                     val orderResult = cachedOrderList?.orders?.find { it.id.toString() == orderIdToProcess }
-                    val orderTimestamp = orderResult?.startDate?.let { parseOrderDate(it) } 
+                    val orderTimestamp = orderResult?.let { parseOrderDate(it.startDate) }
                         ?: System.currentTimeMillis()
                     
                     // Process the order - extract products
@@ -352,8 +352,8 @@ class OrderListViewModel(
         }
         
         // Get last order date
-        val lastOrderDate = orders.maxByOrNull { parseOrderDate(it.startDate) }?.startDate?.let { 
-            formatDateForDisplay(it) 
+        val lastOrderDate = orders.maxByOrNull { parseOrderDate(it.startDate) }?.let { 
+            formatDateForDisplay(it.startDate) 
         }
         
         _orderListState.postValue(
