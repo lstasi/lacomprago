@@ -10,6 +10,7 @@ import com.lacomprago.data.api.debug.ApiEndpoint
 import com.lacomprago.data.api.debug.EndpointDefinitions
 import com.lacomprago.data.api.debug.HttpMethod
 import com.lacomprago.storage.TokenStorage
+import com.lacomprago.util.JwtDecoder
 import kotlinx.coroutines.launch
 
 /**
@@ -94,7 +95,20 @@ class DebugViewModel(
         val storedCustomerId = tokenStorage.getCustomerId()
 
         _tokenStatus.value = if (token != null) TokenStatus.Stored else TokenStatus.None
-        _customerId.value = storedCustomerId ?: ""
+        if (storedCustomerId.isNullOrBlank() && token != null) {
+            // Backfill customer_id from JWT if it wasn't stored previously
+            val derivedId = JwtDecoder.extractCustomerId(token)
+            if (!derivedId.isNullOrBlank()) {
+                tokenStorage.saveCustomerId(derivedId)
+                _customerId.value = derivedId
+                pathParams["customer_id"] = derivedId
+            } else {
+                _customerId.value = ""
+            }
+        } else {
+            _customerId.value = storedCustomerId ?: ""
+            storedCustomerId?.takeIf { it.isNotBlank() }?.let { pathParams["customer_id"] = it }
+        }
     }
 
     /**
@@ -107,7 +121,16 @@ class DebugViewModel(
         }
         
         tokenStorage.saveToken(token)
-        _tokenStatus.value = TokenStatus.Stored
+        val derivedId = JwtDecoder.extractCustomerId(token)
+        if (!derivedId.isNullOrBlank()) {
+            tokenStorage.saveCustomerId(derivedId)
+            _customerId.value = derivedId
+            // Pre-fill path param
+            pathParams["customer_id"] = derivedId
+            _tokenStatus.value = TokenStatus.Stored
+        } else {
+            _tokenStatus.value = TokenStatus.Invalid("Customer ID missing from token; please add it")
+        }
     }
 
     /**

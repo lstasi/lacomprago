@@ -1,44 +1,25 @@
 package com.lacomprago.storage
 
+import com.lacomprago.data.api.ApiValidation
+import com.lacomprago.data.api.ValidationResult
+
 /**
- * Token validator that performs basic token format validation.
- * API validation will be performed on first API call.
+ * Token validator that delegates to ApiValidation for format checks.
+ * API validation is still performed by hitting Mercadona endpoints.
  */
 class TokenValidator {
-    
+
     /**
-     * Validate the token format.
+     * Validate the token format using the shared API rules.
      * @param token The token to validate
      * @return TokenValidationResult containing success or error
      */
     fun validate(token: String): TokenValidationResult {
-        return when {
-            token.isBlank() -> {
-                TokenValidationResult.Invalid("Token cannot be empty")
-            }
-            token.length < MIN_TOKEN_LENGTH -> {
-                TokenValidationResult.Invalid("Token is too short")
-            }
-            !token.matches(TOKEN_PATTERN.toRegex()) -> {
-                TokenValidationResult.Invalid("Token contains invalid characters")
-            }
-            else -> {
-                TokenValidationResult.Valid
-            }
+        val result = ApiValidation.validateToken(token)
+        return when (result) {
+            is ValidationResult.Valid -> TokenValidationResult.Valid
+            is ValidationResult.Invalid -> TokenValidationResult.Invalid(result.message)
         }
-    }
-    
-    companion object {
-        /**
-         * Minimum expected token length
-         */
-        const val MIN_TOKEN_LENGTH = 20
-        
-        /**
-         * Token format: alphanumeric, dashes, underscores, and periods (for JWT)
-         * JWT tokens have the format: header.payload.signature (Base64URL encoded)
-         */
-        private const val TOKEN_PATTERN = "[A-Za-z0-9_.-]+"
     }
 }
 

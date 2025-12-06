@@ -6,6 +6,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.lacomprago.data.api.ApiClient
 import com.lacomprago.BuildConfig
 import com.lacomprago.R
 import com.lacomprago.databinding.ActivityMainBinding
@@ -30,7 +31,8 @@ class MainActivity : AppCompatActivity() {
         
         // Initialize ViewModel with TokenStorage
         val tokenStorage = TokenStorage(applicationContext)
-        viewModel = AuthViewModel(tokenStorage)
+        val apiClient = ApiClient.create(tokenStorage)
+        viewModel = AuthViewModel(tokenStorage, apiClient)
         
         setupListeners()
         observeAuthState()

@@ -153,10 +153,11 @@ class DebugActivity : AppCompatActivity() {
         binding.pathParamsContainer.removeAllViews()
         binding.queryParamsContainer.removeAllViews()
 
-        // Add path parameter inputs
-        if (endpoint.pathParams.isNotEmpty()) {
+        // Add path parameter inputs (exclude customer_id since it is derived from token)
+        val visiblePathParams = endpoint.pathParams.filterNot { it == "customer_id" }
+        if (visiblePathParams.isNotEmpty()) {
             addSectionLabel(binding.pathParamsContainer, getString(R.string.debug_path_params))
-            endpoint.pathParams.forEach { param ->
+            visiblePathParams.forEach { param ->
                 addParameterInput(binding.pathParamsContainer, param, viewModel.getPathParam(param)) { value ->
                     viewModel.setPathParam(param, value)
                 }

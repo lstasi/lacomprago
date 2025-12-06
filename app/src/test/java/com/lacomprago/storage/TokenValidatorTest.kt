@@ -34,11 +34,11 @@ class TokenValidatorTest {
     
     @Test
     fun `validate returns Invalid for short token`() {
-        val shortToken = "abc123" // Less than 20 characters
+        val shortToken = "abc123" // Less than 32 characters
         val result = validator.validate(shortToken)
         
         assertTrue(result is TokenValidationResult.Invalid)
-        assertEquals("Token is too short", (result as TokenValidationResult.Invalid).message)
+        assertEquals("Token is too short (minimum 32 characters)", (result as TokenValidationResult.Invalid).message)
     }
     
     @Test
@@ -52,7 +52,7 @@ class TokenValidatorTest {
     
     @Test
     fun `validate returns Valid for alphanumeric token of minimum length`() {
-        val validToken = "abcdefghijklmnopqrst" // Exactly 20 characters
+        val validToken = "abcdefghijklmnopqrstuvwxyz123456" // Exactly 32 characters
         val result = validator.validate(validToken)
         
         assertTrue(result is TokenValidationResult.Valid)
@@ -60,7 +60,7 @@ class TokenValidatorTest {
     
     @Test
     fun `validate returns Valid for long alphanumeric token`() {
-        val validToken = "abcdefghijklmnopqrstuvwxyz123456789"
+        val validToken = "abcdefghijklmnopqrstuvwxyz1234567890abcd"
         val result = validator.validate(validToken)
         
         assertTrue(result is TokenValidationResult.Valid)
@@ -68,7 +68,7 @@ class TokenValidatorTest {
     
     @Test
     fun `validate returns Valid for token with dashes and underscores`() {
-        val validToken = "abc-def_ghi-jkl_mnopqrst"
+        val validToken = "abc-def_ghi-jkl_mnopqrstuvwxyzzz" // 32 chars including allowed symbols
         val result = validator.validate(validToken)
         
         assertTrue(result is TokenValidationResult.Valid)
@@ -76,7 +76,7 @@ class TokenValidatorTest {
     
     @Test
     fun `validate returns Valid for uppercase token`() {
-        val validToken = "ABCDEFGHIJKLMNOPQRST"
+        val validToken = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456"
         val result = validator.validate(validToken)
         
         assertTrue(result is TokenValidationResult.Valid)
@@ -84,7 +84,7 @@ class TokenValidatorTest {
     
     @Test
     fun `validate returns Valid for mixed case token`() {
-        val validToken = "AbCdEfGhIjKlMnOpQrSt"
+        val validToken = "AbCdEfGhIjKlMnOpQrStUvWxYz123456"
         val result = validator.validate(validToken)
         
         assertTrue(result is TokenValidationResult.Valid)

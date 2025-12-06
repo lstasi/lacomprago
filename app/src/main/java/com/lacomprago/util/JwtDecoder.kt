@@ -1,4 +1,3 @@
-// filepath: /workspace/lab/lacomprago/app/src/main/java/com/lacomprago/util/JwtDecoder.kt
 package com.lacomprago.util
 
 import android.util.Base64
@@ -41,11 +40,16 @@ object JwtDecoder {
             return null
         }
 
-        // The payload is the second part (index 1)
         val payload = parts[1]
 
-        // Base64 decode the payload
-        val decodedBytes = Base64.decode(payload, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+        // Base64 decode the payload; pad if needed to avoid IllegalArgumentException
+        val paddedPayload = when (payload.length % 4) {
+            2 -> "$payload=="
+            3 -> "$payload="
+            else -> payload
+        }
+
+        val decodedBytes = Base64.decode(paddedPayload, Base64.URL_SAFE or Base64.NO_WRAP)
         val decodedString = String(decodedBytes, Charsets.UTF_8)
 
         // Parse as JSON
