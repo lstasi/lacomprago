@@ -36,6 +36,14 @@ class ProductListActivity : AppCompatActivity() {
         observeProductCount()
     }
     
+    override fun onResume() {
+        super.onResume()
+        // Reload products when activity becomes visible
+        // This ensures the list is updated if products were added/modified
+        // in other activities (e.g., OrderListActivity processing orders)
+        viewModel.loadProducts()
+    }
+    
     private fun setupRecyclerView() {
         adapter = ProductAdapter()
         binding.productRecyclerView.apply {
