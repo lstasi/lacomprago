@@ -11,6 +11,7 @@ LaCompraGo is a simple Android application that helps users automate their shopp
 - **Token Authentication**: Simple token input for API access
 - **Order Processing**: Download and process past orders one by one
 - **Product Frequency Analysis**: Track how often products are purchased and when they were last bought
+- **Recommendations**: Personalized product suggestions with comparison to local purchase history
 - **Smart Shopping Cart**: Automatically create shopping carts based on purchase history
 - **Debug Mode Validation**: Debug-only screen to exercise Mercadona endpoints, inspect requests, and view formatted responses
 
@@ -19,6 +20,11 @@ LaCompraGo is a simple Android application that helps users automate their shopp
 - Phase 1 (Design) ✅
 - Phase 2 (Project Setup) ✅
 - Phase 3 (API Refactor & Validation) ✅ — Mercadona endpoints, models, rate limiting, and Debug Mode coverage documented and validated
+- Phase 4 (Token Authentication) ✅
+- Phase 5 (JSON Storage) ✅
+- Phase 6 (Order Processing Feature) ✅
+- Phase 7 (Product List Feature) ✅
+- Phase 8 (Recommendations Integration) ✅ — Personalized product recommendations with local frequency comparison
 
 ## Technical Details
 
@@ -90,7 +96,7 @@ Requirements:
 
 ## Development Status
 
-Documentation through Phase 3 (API refactor and validation) is complete, with implementation and validation tasks moving forward using the outlined Debug Mode.
+Through Phase 8 (Recommendations Integration), all features are complete with implementation and validation. The app now supports personalized recommendations with local frequency comparison.
 
 ## License
 
