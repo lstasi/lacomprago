@@ -51,6 +51,8 @@ Debug Mode is a special UI screen available only in debug builds that allows dev
 │  ○ GET  /customers/{id}/cart/     [Get Cart]        │
 │  ○ GET  /customers/{id}/orders/   [List Orders]     │
 │  ○ GET  /customers/{id}/orders/{orderId}/ [Order]   │
+│  ○ GET  /customers/{id}/orders/{orderId}/lines/     │
+│          prepared/                [Order Lines]     │
 │  ○ GET  /customers/{id}/recommendations/myregulars/ │
 │  ○ PUT  /postal-codes/actions/change-pc/            │
 │                                                     │
@@ -158,21 +160,28 @@ Debug Mode is a special UI screen available only in debug builds that allows dev
 - **Expected Response**: Full order details with products
 - **Validates**: Individual order access
 
-### 4. Get Cart Endpoint
+### 4. Get Order Prepared Lines Endpoint
+- **Purpose**: Get prepared products from a specific order
+- **Endpoint**: `GET /customers/{customer_id}/orders/{order_id}/lines/prepared/?lang={lang}&wh={warehouse}`
+- **Required Fields**: customer_id, order_id, lang (e.g., "es"), wh (warehouse code)
+- **Expected Response**: List of prepared order lines with product details
+- **Validates**: Order prepared lines access with detailed product information
+
+### 5. Get Cart Endpoint
 - **Purpose**: Get current shopping cart
 - **Endpoint**: `GET /customers/{customer_id}/cart/`
 - **Required Fields**: customer_id
 - **Expected Response**: Cart with lines, products, summary
 - **Validates**: Cart access
 
-### 5. Get Recommendations Endpoint
+### 6. Get Recommendations Endpoint
 - **Purpose**: Get personalized product recommendations
 - **Endpoint**: `GET /customers/{customer_id}/recommendations/myregulars/{type}/`
 - **Required Fields**: customer_id, type (precision|recall)
 - **Expected Response**: List of recommended products
 - **Validates**: Recommendations API access
 
-### 6. Set Warehouse Endpoint
+### 7. Set Warehouse Endpoint
 - **Purpose**: Change warehouse by postal code
 - **Endpoint**: `PUT /postal-codes/actions/change-pc/`
 - **Required Body**: `{"new_postal_code": "28001"}`
@@ -276,6 +285,15 @@ object EndpointDefinitions {
             description = "Get details of a specific order"
         ),
         ApiEndpoint(
+            id = "get_order_prepared_lines",
+            name = "Get Order Prepared Lines",
+            method = HttpMethod.GET,
+            path = "/customers/{customer_id}/orders/{order_id}/lines/prepared/",
+            pathParams = listOf("customer_id", "order_id"),
+            queryParams = listOf("lang", "wh"),
+            description = "Get prepared lines for a specific order with product details"
+        ),
+        ApiEndpoint(
             id = "get_cart",
             name = "Get Cart",
             method = HttpMethod.GET,
@@ -358,6 +376,7 @@ Each endpoint should be validated for:
    - Test List Orders endpoint
    - Get a valid order_id from response
    - Test Get Order Details with that order_id
+   - Test Get Order Prepared Lines with order_id, lang="es", and warehouse code (e.g., "mad1")
 
 3. **Cart Testing**
    - Test Get Cart endpoint

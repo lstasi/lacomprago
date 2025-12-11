@@ -71,6 +71,15 @@ object EndpointDefinitions {
             description = "Get details of a specific order"
         ),
         ApiEndpoint(
+            id = "get_order_prepared_lines",
+            name = "Get Order Prepared Lines",
+            method = HttpMethod.GET,
+            path = "customers/{customer_id}/orders/{order_id}/lines/prepared/",
+            pathParams = listOf("customer_id", "order_id"),
+            queryParams = listOf("lang", "wh"),
+            description = "Get prepared lines for a specific order with product details"
+        ),
+        ApiEndpoint(
             id = "get_recommendations_precision",
             name = "Recommendations (Precision)",
             method = HttpMethod.GET,
