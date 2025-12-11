@@ -13,6 +13,7 @@
     <string name="token_stored">Token stored. You can now use the app.</string>
     <string name="continue_to_products">Continue to Products</string>
     <string name="view_orders">View Orders</string>
+    <string name="view_recommendations">View Recommendations</string>
     
     <!-- Order List Screen -->
     <string name="orders_title">Orders</string>
@@ -102,4 +103,22 @@
     <string name="debug_response_status">Status: %1$d %2$s</string>
     <string name="debug_response_duration">Response time: %1$dms</string>
     <string name="debug_response_copied">Response copied to clipboard</string>
+    
+    <!-- Recommendations Screen -->
+    <string name="recommendations_title">Recommendations</string>
+    <string name="loading_recommendations">Loading recommendations…</string>
+    <string name="no_recommendations">No recommendations available</string>
+    <string name="no_recommendations_hint">Process more orders to get personalized recommendations</string>
+    <string name="error_loading_recommendations">Failed to load recommendations</string>
+    <string name="recommendations_info_title">About Recommendations</string>
+    <string name="recommendations_info_description">These are personalized product suggestions based on your purchase history from Mercadona. Compare them with your local purchase frequency to discover patterns.</string>
+    <string name="precision_recommendations_title">What I Most Buy</string>
+    <string name="precision_recommendations_subtitle">Products you purchase most frequently</string>
+    <string name="recall_recommendations_title">I Also Buy</string>
+    <string name="recall_recommendations_subtitle">Products you also purchase regularly</string>
+    <string name="recommended_qty">Recommended</string>
+    <string name="local_frequency">Local Freq</string>
+    <string name="new_product">New</string>
+    <string name="price_format">%1$s€</string>
+    <string name="reference_price_format">%1$s€/%2$s</string>
 </resources>

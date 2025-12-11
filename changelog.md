@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (Phase 8: Recommendations Integration)
+- RecommendationsState sealed class for UI state management
+- RecommendationsViewModel for fetching and managing recommendations data
+- RecommendationsActivity for displaying recommendations
+- RecommendationAdapter for RecyclerView with local frequency comparison
+- Navigation from MainActivity to RecommendationsActivity
+- Display precision recommendations (what I most buy)
+- Display recall recommendations (I also buy)
+- Comparison with local product frequency
+- "New Product" badge for items not in local database
+- Unit tests for RecommendationsState sealed class
+
 ### Changed
 - Completed Phase 3 (API Refactor & Validation) documentation: Mercadona endpoints, models, rate limiting, and Debug Mode validation marked done in todo.md and README.md
 - Default API base URL now points to https://tienda.mercadona.es/api/ with client paths aligned (no duplicate /api/ segments)
