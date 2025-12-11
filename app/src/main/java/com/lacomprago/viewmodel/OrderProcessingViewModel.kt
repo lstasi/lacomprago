@@ -224,7 +224,7 @@ class OrderProcessingViewModel(
         // Update each product from the order
         for (item in items) {
             val product = item.product ?: continue
-            val productId = item.productId
+            val productId = product.id
             val productName = product.displayName ?: "Unknown Product"
             val quantity = item.preparedQuantity ?: item.orderedQuantity ?: 1.0
             val category = product.categories?.firstOrNull()?.name
