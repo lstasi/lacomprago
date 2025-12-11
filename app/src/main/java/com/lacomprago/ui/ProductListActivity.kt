@@ -29,7 +29,8 @@ class ProductListActivity : AppCompatActivity() {
         // Initialize ViewModel with JsonStorage
         val jsonStorage = JsonStorage(applicationContext)
         viewModel = ProductViewModel(jsonStorage)
-        
+
+        setupToolbar()
         setupRecyclerView()
         setupListeners()
         observeProductListState()
@@ -42,6 +43,12 @@ class ProductListActivity : AppCompatActivity() {
         // This ensures the list is updated if products were added/modified
         // in other activities (e.g., OrderListActivity processing orders)
         viewModel.loadProducts()
+    }
+
+    private fun setupToolbar() {
+        binding.toolbar.setNavigationOnClickListener {
+            finish()
+        }
     }
     
     private fun setupRecyclerView() {
