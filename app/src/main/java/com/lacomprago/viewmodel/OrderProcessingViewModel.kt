@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.lacomprago.data.api.ApiClient
 import com.lacomprago.data.api.ApiException
 import com.lacomprago.data.api.model.OrderDetailsResponse
+import com.lacomprago.data.api.model.OrderPreparedLinesResponse
 import com.lacomprago.data.api.model.OrderResult
 import com.lacomprago.model.CachedOrderList
 import com.lacomprago.model.OrderProcessingState
@@ -137,7 +138,9 @@ class OrderProcessingViewModel(
         
         if (unprocessedOrders.isEmpty()) {
             _processingState.value = OrderProcessingState.Completed(
-                updatedProductCount = 0,
+                productsBefore = 0,
+                productsFound = 0,
+                productsAdded = 0,
                 remainingOrders = 0
             )
             return
@@ -153,24 +156,122 @@ class OrderProcessingViewModel(
             remainingOrders = remainingAfterThis
         )
         
-        // Fetch order details (includes product items)
-        val orderDetails = apiClient.getOrderDetails(customerId, orderToProcess.id.toString())
+        // Get warehouse code from order
+        val warehouseCode = orderToProcess.warehouseCode ?: "bcn1" // Default to bcn1 if not available
+        
+        // Fetch prepared order lines (new endpoint)
+        val preparedLines = apiClient.getOrderPreparedLines(
+            customerId = customerId,
+            orderId = orderToProcess.id.toString(),
+            warehouseCode = warehouseCode
+        )
 
-        // Update products from order
-        val updatedCount = updateProductsFromOrder(orderDetails, orderToProcess)
+        // Update products from order and get statistics
+        val stats = updateProductsFromPreparedLines(preparedLines, orderToProcess)
         
         // Mark order as processed
         markOrderAsProcessed(orderToProcess.id.toString())
         
-        Log.d(TAG, "Processed order ${orderToProcess.id}, updated $updatedCount products, $remainingAfterThis remaining")
+        Log.d(TAG, "Processed order ${orderToProcess.id}: ${stats.productsBefore} products before, ${stats.productsFound} found in order, ${stats.productsAdded} added. $remainingAfterThis remaining")
         
         // Step 7: Complete
         _processingState.value = OrderProcessingState.Completed(
-            updatedProductCount = updatedCount,
+            productsBefore = stats.productsBefore,
+            productsFound = stats.productsFound,
+            productsAdded = stats.productsAdded,
             remainingOrders = remainingAfterThis
         )
     }
     
+    /**
+     * Update products from prepared order lines.
+     * For each item in the order, increment the product frequency
+     * and update the last purchase date.
+     *
+     * @param preparedLines The prepared order lines response with product items
+     * @param orderResult The order result with metadata (dates, etc.)
+     * @return Statistics about the processing (products before, found, added)
+     */
+    private suspend fun updateProductsFromPreparedLines(
+        preparedLines: OrderPreparedLinesResponse,
+        orderResult: OrderResult
+    ): ProcessingStatistics = withContext(Dispatchers.IO) {
+        // Load current products
+        val productList = jsonStorage.loadProductList() ?: ProductList(emptyList())
+        val productsMap = productList.products.associateBy { it.id }.toMutableMap()
+        
+        // Count products before processing
+        val productsBefore = productsMap.size
+        
+        // Parse order date from OrderResult (use startDate or endDate)
+        val orderTimestamp = parseOrderDate(orderResult.startDate)
+        
+        // Get lines from prepared order response
+        val items = preparedLines.results
+        if (items.isEmpty()) {
+            Log.w(TAG, "Order ${orderResult.id} has no items")
+            return@withContext ProcessingStatistics(
+                productsBefore = productsBefore,
+                productsFound = 0,
+                productsAdded = 0
+            )
+        }
+        
+        // Count products found in order
+        val productsFound = items.size
+        var productsAdded = 0
+        
+        // Update each product from the order
+        for (item in items) {
+            val product = item.product ?: continue
+            val productId = product.id
+            val productName = product.displayName ?: "Unknown Product"
+            val quantity = item.preparedQuantity ?: item.orderedQuantity ?: 1.0
+            val category = product.categories?.firstOrNull()?.name
+
+            val existingProduct = productsMap[productId]
+
+            if (existingProduct == null) {
+                // New product - increment counter
+                productsAdded++
+            }
+
+            val updatedProduct = if (existingProduct != null) {
+                // Update existing product
+                existingProduct.copy(
+                    frequency = existingProduct.frequency + 1,
+                    lastPurchase = maxOf(existingProduct.lastPurchase, orderTimestamp),
+                    totalQuantity = existingProduct.totalQuantity + quantity
+                )
+            } else {
+                // Create new product entry
+                Product(
+                    id = productId,
+                    name = productName,
+                    frequency = 1,
+                    lastPurchase = orderTimestamp,
+                    category = category,
+                    totalQuantity = quantity
+                )
+            }
+
+            productsMap[productId] = updatedProduct
+        }
+        
+        // Save updated products
+        val updatedProductList = ProductList(
+            products = productsMap.values.toList(),
+            lastUpdated = System.currentTimeMillis()
+        )
+        jsonStorage.saveProductList(updatedProductList)
+        
+        ProcessingStatistics(
+            productsBefore = productsBefore,
+            productsFound = productsFound,
+            productsAdded = productsAdded
+        )
+    }
+
     /**
      * Update products from an order.
      * For each item in the order, increment the product frequency
@@ -279,3 +380,16 @@ class OrderProcessingViewModel(
         private const val TAG = "OrderProcessingVM"
     }
 }
+
+/**
+ * Statistics from processing an order.
+ *
+ * @property productsBefore Number of products in the list before processing
+ * @property productsFound Number of products found in the order
+ * @property productsAdded Number of new products added to the list
+ */
+private data class ProcessingStatistics(
+    val productsBefore: Int,
+    val productsFound: Int,
+    val productsAdded: Int
+)

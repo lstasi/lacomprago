@@ -49,11 +49,15 @@ class OrderProcessingStateTest {
     @Test
     fun `Completed state contains correct values`() {
         val state = OrderProcessingState.Completed(
-            updatedProductCount = 42,
+            productsBefore = 100,
+            productsFound = 15,
+            productsAdded = 3,
             remainingOrders = 10
         )
         
-        assertEquals(42, state.updatedProductCount)
+        assertEquals(100, state.productsBefore)
+        assertEquals(15, state.productsFound)
+        assertEquals(3, state.productsAdded)
         assertEquals(10, state.remainingOrders)
     }
 
@@ -61,7 +65,9 @@ class OrderProcessingStateTest {
     fun `Completed state has default values`() {
         val state = OrderProcessingState.Completed()
         
-        assertEquals(0, state.updatedProductCount)
+        assertEquals(0, state.productsBefore)
+        assertEquals(0, state.productsFound)
+        assertEquals(0, state.productsAdded)
         assertEquals(0, state.remainingOrders)
     }
 
@@ -85,7 +91,7 @@ class OrderProcessingStateTest {
             OrderProcessingState.Idle,
             OrderProcessingState.FetchingOrders,
             OrderProcessingState.Processing("order_1", 9),
-            OrderProcessingState.Completed(50, 5),
+            OrderProcessingState.Completed(100, 15, 3, 5),
             OrderProcessingState.Cancelled,
             OrderProcessingState.Error("Error message")
         )
@@ -116,11 +122,13 @@ class OrderProcessingStateTest {
 
     @Test
     fun `Completed state copy works correctly`() {
-        val original = OrderProcessingState.Completed(50, 5)
+        val original = OrderProcessingState.Completed(100, 15, 3, 5)
         val updated = original.copy(remainingOrders = 4)
         
         assertEquals(5, original.remainingOrders)
         assertEquals(4, updated.remainingOrders)
-        assertEquals(original.updatedProductCount, updated.updatedProductCount)
+        assertEquals(original.productsBefore, updated.productsBefore)
+        assertEquals(original.productsFound, updated.productsFound)
+        assertEquals(original.productsAdded, updated.productsAdded)
     }
 }

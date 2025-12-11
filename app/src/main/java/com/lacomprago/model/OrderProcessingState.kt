@@ -29,11 +29,15 @@ sealed class OrderProcessingState {
     
     /**
      * Completed state - order processed successfully.
-     * @property updatedProductCount Number of products that were updated
+     * @property productsBefore Number of products before processing
+     * @property productsFound Number of products found in the order
+     * @property productsAdded Number of new products added to the list
      * @property remainingOrders Number of orders still to be processed
      */
     data class Completed(
-        val updatedProductCount: Int = 0,
+        val productsBefore: Int = 0,
+        val productsFound: Int = 0,
+        val productsAdded: Int = 0,
         val remainingOrders: Int = 0
     ) : OrderProcessingState()
     

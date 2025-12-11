@@ -62,6 +62,8 @@
     <string name="processing_complete_none">Order processed successfully!\nNo new products found.</string>
     <string name="processing_cancelled">Processing cancelled.</string>
     <string name="processing_error">Error: %1$s</string>
+    <string name="processing_complete_with_stats">Order processed!\n\nProducts before: %1$d\nProducts in order: %2$d\nNew products added: %3$d</string>
+    <string name="processing_complete_with_stats_remaining">Order processed!\n\nProducts before: %1$d\nProducts in order: %2$d\nNew products added: %3$d\n\n%4$d orders remaining.</string>
     
     <!-- Cart -->
     <string name="cart_title">Shopping Cart</string>
