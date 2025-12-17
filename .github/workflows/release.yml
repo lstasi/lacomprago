@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   release:
-    name: Create Release with Signed APK
+    name: Create Release with Signed Release and Debug APKs
     runs-on: ubuntu-latest
 
     steps:
