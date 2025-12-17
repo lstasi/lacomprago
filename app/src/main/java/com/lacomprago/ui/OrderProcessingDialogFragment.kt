@@ -112,17 +112,21 @@ class OrderProcessingDialogFragment : DialogFragment() {
             
             is OrderProcessingState.Completed -> {
                 showResultState()
-                if (state.updatedProductCount > 0) {
+                if (state.productsFound > 0) {
                     if (state.remainingOrders > 0) {
                         resultMessage.text = getString(
-                            R.string.processing_complete_remaining,
-                            state.updatedProductCount,
+                            R.string.processing_complete_with_stats_remaining,
+                            state.productsBefore,
+                            state.productsFound,
+                            state.productsAdded,
                             state.remainingOrders
                         )
                     } else {
                         resultMessage.text = getString(
-                            R.string.processing_complete,
-                            state.updatedProductCount
+                            R.string.processing_complete_with_stats,
+                            state.productsBefore,
+                            state.productsFound,
+                            state.productsAdded
                         )
                     }
                     resultMessage.setTextColor(resources.getColor(R.color.success_green, null))

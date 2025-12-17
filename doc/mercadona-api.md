@@ -401,11 +401,109 @@ Authorization: Bearer <access_token>
 **Response (200 OK)**
 Same structure as a single order in the List Orders response.
 
+### 8. Get Order Prepared Lines
+
+Get the actual prepared products from a specific order, including what was ordered vs what was prepared.
+
+```
+GET https://tienda.mercadona.es/api/customers/{customer_id}/orders/{order_id}/lines/prepared/?lang={language}&wh={warehouse}
+```
+
+**Request Headers**
+```
+Authorization: Bearer <access_token>
+```
+
+**Path Parameters**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| customer_id | string | The customer ID |
+| order_id | integer | The order ID |
+
+**Query Parameters**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| lang | string | Language code (default "es") |
+| wh | string | Warehouse code (e.g., "mad1", "bcn1") |
+
+**Response (200 OK)**
+```json
+{
+    "next_page": null,
+    "results": [
+        {
+            "ordered_quantity": 6.0,
+            "prepared_quantity": 6.0,
+            "preparation_result": "complete",
+            "total_prepared_price": "7.50",
+            "product_id": "51621",
+            "product": {
+                "id": "51621",
+                "display_name": "Queso camembert Marcillat",
+                "slug": "queso-camembert-marcillat-caja",
+                "thumbnail": "https://prod-mercadona.imgix.net/images/...",
+                "packaging": "Caja",
+                "published": true,
+                "limit": 999,
+                "share_url": "https://tienda.mercadona.es/product/51621/...",
+                "categories": [
+                    {
+                        "id": 4,
+                        "level": 0,
+                        "name": "Charcutería y quesos",
+                        "order": 159
+                    }
+                ],
+                "price_instructions": {
+                    "unit_price": "1.25",
+                    "bulk_price": "5.21",
+                    "unit_size": 0.24,
+                    "reference_price": "5.21",
+                    "reference_format": "kg",
+                    "size_format": "kg",
+                    "selling_method": 0,
+                    "unit_selector": true,
+                    "iva": 4
+                },
+                "badges": {
+                    "is_water": false,
+                    "requires_age_check": false
+                },
+                "status": null,
+                "unavailable_from": null,
+                "unavailable_weekdays": null
+            },
+            "original_price_instructions": {
+                "unit_price": "1.25",
+                "bulk_price": "5.21",
+                "unit_size": 0.24,
+                "reference_price": "5.21",
+                "reference_format": "kg"
+            }
+        }
+    ]
+}
+```
+
+**Preparation Results**
+| Result | Description |
+|--------|-------------|
+| complete | All ordered quantity was prepared |
+| incomplete | Only partial quantity was prepared |
+| unavailable | Product was not available |
+
+**Important Notes:**
+- This endpoint provides detailed product information including categories and pricing
+- `ordered_quantity` may differ from `prepared_quantity` if items were unavailable
+- The `product` object contains full product details with current pricing
+- `original_price_instructions` shows the price at the time of ordering
+- Warehouse code is required and should match the order's warehouse
+
 ---
 
 ## Recommendations
 
-### 8. Get My Recommended Products
+### 10. Get My Recommended Products
 
 Get personalized product recommendations based on purchase history.
 
@@ -485,7 +583,7 @@ Authorization: Bearer <access_token>
 
 ## Checkout Flow
 
-### 9. Create Checkout
+### 11. Create Checkout
 
 Initiate a checkout from the current cart.
 
@@ -579,7 +677,7 @@ Content-Type: application/json
 }
 ```
 
-### 10. List Address Delivery Slots
+### 12. List Address Delivery Slots
 
 Get available delivery time slots for an address.
 
@@ -623,7 +721,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-### 11. Set Checkout Delivery Info
+### 13. Set Checkout Delivery Info
 
 Set the delivery address and time slot for a checkout.
 
@@ -658,7 +756,7 @@ Content-Type: application/json
 **Response (200 OK)**
 Returns the updated checkout object.
 
-### 12. Submit Checkout Order
+### 14. Submit Checkout Order
 
 Finalize and submit the checkout as an order.
 
@@ -738,11 +836,12 @@ Authorization: Bearer <access_token> (for authenticated endpoints)
 |---|----------|--------|---------|----------|
 | 6 | `/api/customers/{customer_id}/orders/` | GET | List all orders | HIGH |
 | 7 | `/api/customers/{customer_id}/orders/{order_id}/` | GET | Get order details | HIGH |
+| 8 | `/api/customers/{customer_id}/orders/{order_id}/lines/prepared/` | GET | Get order prepared lines | HIGH |
 
 ### Phase 3 - Recommendations & Cart
 | # | Endpoint | Method | Purpose | Priority |
 |---|----------|--------|---------|----------|
-| 8 | `/api/customers/{customer_id}/recommendations/myregulars/{type}/` | GET | Get product recommendations | MEDIUM |
+| 10 | `/api/customers/{customer_id}/recommendations/myregulars/{type}/` | GET | Get product recommendations | MEDIUM |
 | 4 | `/api/customers/{customer_id}/cart/` | GET | Get current cart | MEDIUM |
 | 5 | `/api/customers/{customer_id}/cart/` | PUT | Update cart | MEDIUM |
 
@@ -750,7 +849,7 @@ Authorization: Bearer <access_token> (for authenticated endpoints)
 | # | Endpoint | Method | Purpose | Priority |
 |---|----------|--------|---------|----------|
 | 1 | `/api/auth/tokens/` | POST | Login with credentials | LOW |
-| 9-12 | Checkout endpoints | Various | Complete checkout flow | LOW |
+| 11-14 | Checkout endpoints | Various | Complete checkout flow | LOW |
 
 ---
 

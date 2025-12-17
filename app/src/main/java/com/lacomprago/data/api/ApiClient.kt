@@ -9,6 +9,7 @@ import com.lacomprago.data.api.model.MercadonaCartRequest
 import com.lacomprago.data.api.model.MercadonaCartResponse
 import com.lacomprago.data.api.model.OrderLinesResponse
 import com.lacomprago.data.api.model.OrderListResponse
+import com.lacomprago.data.api.model.OrderPreparedLinesResponse
 import com.lacomprago.data.api.model.OrderResult
 import com.lacomprago.data.api.model.RecommendationsResponse
 import com.lacomprago.data.api.model.SetWarehouseRequest
@@ -167,6 +168,45 @@ class ApiClient(
         httpClient.newCall(request).execute().use { response ->
             logResponse(response)
             handleResponse(response, "Failed to fetch order lines for order $orderId")
+        }
+    }
+
+    /**
+     * Get prepared lines for a specific order.
+     *
+     * This endpoint returns the actual prepared products from an order,
+     * including what was ordered vs what was prepared.
+     *
+     * Endpoint: GET /api/customers/{customer_id}/orders/{order_id}/lines/prepared/?lang=es&wh={warehouse}
+     *
+     * @param customerId The customer ID
+     * @param orderId The ID of the order to fetch
+     * @param warehouseCode The warehouse code (e.g., "bcn1")
+     * @param language Language code (default "es")
+     * @return Prepared order lines with product details
+     * @throws ApiException if the request fails
+     */
+    suspend fun getOrderPreparedLines(
+        customerId: String,
+        orderId: String,
+        warehouseCode: String,
+        language: String = "es"
+    ): OrderPreparedLinesResponse = withContext(Dispatchers.IO) {
+        ApiValidation.validateCustomerId(customerId).throwIfInvalid()
+        ApiValidation.validateOrderId(orderId).throwIfInvalid()
+        
+        rateLimiter.acquire()
+        
+        val request = Request.Builder()
+            .url("${ApiConfig.BASE_URL}customers/$customerId/orders/$orderId/lines/prepared/?lang=$language&wh=$warehouseCode")
+            .get()
+            .build()
+        
+        logRequest(request)
+        
+        httpClient.newCall(request).execute().use { response ->
+            logResponse(response)
+            handleResponse(response, "Failed to fetch prepared lines for order $orderId")
         }
     }
 
