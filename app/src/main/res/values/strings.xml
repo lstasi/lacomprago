@@ -11,8 +11,8 @@
     <string name="token_clear">Clear Token</string>
     <string name="token_validating">Validating token…</string>
     <string name="token_stored">Token stored. You can now use the app.</string>
-    <string name="continue_to_products">Continue to Products</string>
-    <string name="view_orders">View Orders</string>
+    <string name="continue_to_products">Products</string>
+    <string name="view_orders">Orders</string>
     
     <!-- Order List Screen -->
     <string name="orders_title">Orders</string>
@@ -31,9 +31,13 @@
     <string name="orders_reprocess">Reprocess Order</string>
     <string name="orders_all_processed">All orders processed!</string>
     <string name="orders_clear">Clear All Data</string>
+    <string name="orders_clear_processed">Clear Processed Orders</string>
     <string name="orders_clear_confirm_title">Clear All Data?</string>
+    <string name="orders_clear_processed_confirm_title">Clear Processed Orders?</string>
     <string name="orders_clear_confirm_message">This will clear the cached order list, downloaded orders, and processed orders. You\'ll need to start fresh.</string>
+    <string name="orders_clear_processed_confirm_message">This will clear the list of processed order IDs. Already processed orders can be reprocessed.</string>
     <string name="orders_cleared">All data cleared</string>
+    <string name="orders_processed_cleared">Processed orders cleared</string>
     <string name="orders_info_text">Step 1: Get List Orders - fetches order IDs from API\nStep 2: Get Orders - downloads one order\'s details\nStep 3: Process Order - extracts products from downloaded orders</string>
     <string name="product_stats_title">Product Statistics</string>
     <string name="total_products">Total Products: %1$d</string>

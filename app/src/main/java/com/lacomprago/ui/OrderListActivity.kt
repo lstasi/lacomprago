@@ -65,6 +65,11 @@ class OrderListActivity : AppCompatActivity() {
             viewModel.processNextOrder()
         }
         
+        // Clear processed orders button
+        binding.clearProcessedOrdersButton.setOnClickListener {
+            showClearProcessedOrdersConfirmation()
+        }
+        
         // Clear orders button
         binding.clearOrdersButton.setOnClickListener {
             showClearOrdersConfirmation()
@@ -179,6 +184,17 @@ class OrderListActivity : AppCompatActivity() {
             .show()
     }
     
+    private fun showClearProcessedOrdersConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.orders_clear_processed_confirm_title)
+            .setMessage(R.string.orders_clear_processed_confirm_message)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                clearProcessedOrders()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+    
     private fun clearAllData() {
         val jsonStorage = JsonStorage(applicationContext)
         jsonStorage.deleteCachedOrderList()
@@ -194,6 +210,21 @@ class OrderListActivity : AppCompatActivity() {
         ).show()
         
         // Reload from cache to show empty state
+        viewModel.loadFromLocalCache()
+    }
+    
+    private fun clearProcessedOrders() {
+        val jsonStorage = JsonStorage(applicationContext)
+        jsonStorage.deleteProcessedOrders()
+        
+        // Show toast
+        Toast.makeText(
+            this,
+            R.string.orders_processed_cleared,
+            Toast.LENGTH_SHORT
+        ).show()
+        
+        // Reload from cache to reflect the change
         viewModel.loadFromLocalCache()
     }
 }

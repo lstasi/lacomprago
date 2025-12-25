@@ -197,6 +197,15 @@
                 android:layout_marginBottom="12dp"
                 style="@style/Widget.Material3.Button.OutlinedButton" />
 
+            <!-- Clear Processed Orders Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/clearProcessedOrdersButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/orders_clear_processed"
+                android:layout_marginBottom="12dp"
+                style="@style/Widget.Material3.Button.TextButton" />
+
             <!-- Clear Orders Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/clearOrdersButton"
