@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   release:
-    name: Create Release with Signed APK
+    name: Create Release with Signed Release and Debug APKs
     runs-on: ubuntu-latest
 
     steps:
@@ -61,6 +61,9 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace
 
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --stacktrace
+
       - name: Sign APK
         id: sign_apk
         uses: r0adkll/sign-android-release@v1
@@ -91,6 +94,21 @@ jobs:
           echo "Final APK files:"
           ls -lh *.apk
 
+      - name: Rename debug APK
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          cd app/build/outputs/apk/debug
+          DEBUG_APK=$(ls *.apk 2>/dev/null | head -n1)
+          if [ -n "$DEBUG_APK" ]; then
+            mv "$DEBUG_APK" "LaCompraGo-v${VERSION}-debug.apk"
+            echo "✓ Renamed $DEBUG_APK to LaCompraGo-v${VERSION}-debug.apk"
+          else
+            echo "⚠ Warning: No debug APK found"
+            exit 1
+          fi
+          echo "Debug APK:"
+          ls -lh *.apk
+
       - name: Generate changelog
         id: changelog
         run: |
@@ -117,6 +135,9 @@ jobs:
 
             ### Installation
             Download the APK file below and install it on your Android 14+ device.
+            
+            - **LaCompraGo-v${{ steps.version.outputs.VERSION }}.apk**: Signed release version (recommended for production use)
+            - **LaCompraGo-v${{ steps.version.outputs.VERSION }}-debug.apk**: Debug version (for testing and debugging)
 
             ### Requirements
             - Android 14 (API Level 34) or higher
@@ -125,6 +146,7 @@ jobs:
             See [changelog.md](https://github.com/${{ github.repository }}/blob/main/changelog.md) for full history.
           files: |
             app/build/outputs/apk/release/LaCompraGo-v${{ steps.version.outputs.VERSION }}.apk
+            app/build/outputs/apk/debug/LaCompraGo-v${{ steps.version.outputs.VERSION }}-debug.apk
           draft: false
           prerelease: false
         env:
