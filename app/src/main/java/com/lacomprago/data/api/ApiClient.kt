@@ -7,7 +7,7 @@ import com.lacomprago.data.api.model.CartLineRequest
 import com.lacomprago.data.api.model.CustomerResponse
 import com.lacomprago.data.api.model.MercadonaCartRequest
 import com.lacomprago.data.api.model.MercadonaCartResponse
-import com.lacomprago.data.api.model.OrderDetailsResponse
+import com.lacomprago.data.api.model.OrderLinesResponse
 import com.lacomprago.data.api.model.OrderListResponse
 import com.lacomprago.data.api.model.OrderPreparedLinesResponse
 import com.lacomprago.data.api.model.OrderResult
@@ -143,31 +143,31 @@ class ApiClient(
     }
     
     /**
-     * Get details of a specific order including product items.
+     * Get the lines (products) of a specific order.
      *
-     * Endpoint: GET /api/customers/{customer_id}/orders/{order_id}/
+     * Endpoint: GET /api/customers/{customer_id}/orders/{order_id}/lines/prepared/
      *
      * @param customerId The customer ID
-     * @param orderId The ID of the order to fetch
-     * @return Order details with product items
+     * @param orderId The ID of the order to fetch lines from
+     * @return OrderLinesResponse containing the list of products in the order
      * @throws ApiException if the request fails
      */
-    suspend fun getOrderDetails(customerId: String, orderId: String): OrderDetailsResponse = withContext(Dispatchers.IO) {
+    suspend fun getOrderLines(customerId: String, orderId: String): OrderLinesResponse = withContext(Dispatchers.IO) {
         ApiValidation.validateCustomerId(customerId).throwIfInvalid()
         ApiValidation.validateOrderId(orderId).throwIfInvalid()
-        
+
         rateLimiter.acquire()
-        
+
         val request = Request.Builder()
-            .url("${ApiConfig.BASE_URL}customers/$customerId/orders/$orderId/")
+            .url("${ApiConfig.BASE_URL}customers/$customerId/orders/$orderId/lines/prepared/")
             .get()
             .build()
-        
+
         logRequest(request)
-        
+
         httpClient.newCall(request).execute().use { response ->
             logResponse(response)
-            handleResponse(response, "Failed to fetch order $orderId")
+            handleResponse(response, "Failed to fetch order lines for order $orderId")
         }
     }
 
@@ -503,4 +503,3 @@ data class DebugApiResponse(
     val durationMs: Long,
     val error: String?
 )
-

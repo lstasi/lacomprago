@@ -63,7 +63,7 @@ fun createHttpClient(tokenStorage: TokenStorage): OkHttpClient {
 | 3 | `/api/customers/{customer_id}/cart/` | GET | Get current cart |
 | 4 | `/api/customers/{customer_id}/cart/` | PUT | Update cart |
 | 5 | `/api/customers/{customer_id}/orders/` | GET | List orders (paginated) |
-| 6 | `/api/customers/{customer_id}/orders/{order_id}/` | GET | Get order details |
+| 6 | `/api/customers/{customer_id}/orders/{order_id}/lines/prepared/` | GET | Get order details (product lines) |
 | 7 | `/api/customers/{customer_id}/recommendations/myregulars/{type}/` | GET | Get recommendations |
 | 8 | `/api/postal-codes/actions/change-pc/` | PUT | Set warehouse |
 
@@ -135,12 +135,12 @@ Authorization: Bearer {token}
 }
 ```
 
-### 3. Get Order Details
+### 3. Get Order Lines (Products)
 
-Fetch details of a specific order including products.
+Fetch the product lines of a specific order.
 
 ```
-GET /api/customers/{customer_id}/orders/{order_id}/
+GET /api/customers/{customer_id}/orders/{order_id}/lines/prepared/
 ```
 
 **Headers**
@@ -149,8 +149,8 @@ Authorization: Bearer {token}
 ```
 
 **Response (200 OK)**
-Returns `OrderDetailsResponse` with product items.
-See [mercadona-api.md](./mercadona-api.md) for complete response structure.
+Returns `OrderLinesResponse` with a list of product items.
+See the data models for the complete response structure.
 
 ### 4. Get Recommendations
 
@@ -273,26 +273,26 @@ class ApiClient(
     }
     
     /**
-     * Get details of a specific order.
+     * Get the lines of a specific order.
      *
      * @param customerId The customer ID
      * @param orderId The order ID
-     * @return Full order details
+     * @return The product lines from the order
      * @throws ApiException if the request fails
      */
-    suspend fun getOrderDetails(customerId: String, orderId: Int): OrderDetailsResponse = withContext(Dispatchers.IO) {
+    suspend fun getOrderLines(customerId: String, orderId: String): OrderLinesResponse = withContext(Dispatchers.IO) {
         require(customerId.isNotBlank()) { "Customer ID cannot be blank" }
-        require(orderId > 0) { "Order ID must be positive" }
+        require(orderId.isNotBlank()) { "Order ID must be positive" }
         
         rateLimiter.acquire()
         
         val request = Request.Builder()
-            .url("${ApiConfig.BASE_URL}customers/$customerId/orders/$orderId/")
+            .url("${ApiConfig.BASE_URL}customers/$customerId/orders/$orderId/lines/prepared/")
             .get()
             .build()
         
         httpClient.newCall(request).execute().use { response ->
-            handleResponse(response, "Failed to fetch order $orderId")
+            handleResponse(response, "Failed to fetch order lines for $orderId")
         }
     }
     
@@ -547,7 +547,7 @@ suspend fun processOrders(
             onProgress(index + 1, totalCount, order.id)
             
             // Fetch order details (rate limiter handles delays)
-            val orderDetails = apiClient.getOrderDetails(customerId, order.id)
+            val orderDetails = apiClient.getOrderLines(customerId, order.id.toString())
             
             // Update products
             updateProductsFromOrder(orderDetails)
@@ -572,21 +572,18 @@ suspend fun processOrders(
 Mercadona orders contain products with detailed information. We extract what we need.
 
 ```kotlin
-fun extractProductsFromOrder(order: MercadonaOrderResponse): List<ProductUpdate> {
-    val orderDate = parseIsoDate(order.start_date)
-    
-    // Orders may have a 'lines' or 'products' field depending on the endpoint
-    // We need to handle both cases
-    
-    return order.lines?.map { line ->
-        ProductUpdate(
-            id = line.product.id,
-            name = line.product.display_name,
-            quantity = line.quantity,
-            category = line.product.categories.firstOrNull()?.name,
-            orderDate = orderDate
-        )
-    } ?: emptyList()
+fun extractProductsFromOrder(order: OrderLinesResponse, orderDate: Long): List<ProductUpdate> {
+    return order.results.mapNotNull { line ->
+        line.product?.let { productDetails ->
+            ProductUpdate(
+                id = productDetails.id,
+                name = productDetails.displayName ?: "Unknown",
+                quantity = line.orderedQuantity,
+                category = productDetails.categories?.firstOrNull()?.name,
+                orderDate = orderDate
+            )
+        }
+    }
 }
 
 data class ProductUpdate(
@@ -871,7 +868,7 @@ suspend fun processOrders(
                 // Delay between order fetches
                 delay(ApiConfig.ORDER_FETCH_DELAY_MS)
                 
-                val orderDetails = apiClient.getOrderDetails(customerId, order.id)
+                val orderDetails = apiClient.getOrderLines(customerId, order.id.toString())
                 updateProductsFromOrder(orderDetails)
                 markOrderAsProcessed(order.id)
                 

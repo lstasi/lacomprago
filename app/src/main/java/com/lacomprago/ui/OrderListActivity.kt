@@ -41,8 +41,17 @@ class OrderListActivity : AppCompatActivity() {
         setupToolbar()
         setupListeners()
         observeOrderListState()
+        observeProcessingResult()
     }
-    
+
+    private fun observeProcessingResult() {
+        viewModel.processingResult.observe(this) { event ->
+            event.getContentIfNotHandled()?.let { message ->
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     private fun setupToolbar() {
         binding.toolbar.setNavigationOnClickListener {
             finish()
@@ -53,11 +62,6 @@ class OrderListActivity : AppCompatActivity() {
         // Get List Orders button - fetch order list from API
         binding.getListOrdersButton.setOnClickListener {
             viewModel.fetchOrderListFromApi()
-        }
-        
-        // Get Orders button - download one order
-        binding.getOrdersButton.setOnClickListener {
-            viewModel.downloadNextOrder()
         }
         
         // Process Order button - process one downloaded order
@@ -141,25 +145,13 @@ class OrderListActivity : AppCompatActivity() {
         }
         
         // Enable/disable buttons based on state
-        val hasOrderList = state.totalOrders > 0
-        val hasUndownloadedOrders = state.totalOrders > state.downloadedCount
         val hasUnprocessedOrders = state.unprocessedCount > 0
-        
-        // Get Orders button enabled only if there are orders to download
-        binding.getOrdersButton.isEnabled = hasUndownloadedOrders
-        if (hasUndownloadedOrders) {
-            binding.getOrdersButton.text = getString(R.string.orders_get_orders)
-        } else if (hasOrderList) {
-            binding.getOrdersButton.text = "All Orders Downloaded"
-        } else {
-            binding.getOrdersButton.text = getString(R.string.orders_get_orders)
-        }
         
         // Process Order button enabled only if there are downloaded but unprocessed orders
         binding.processOrderButton.isEnabled = hasUnprocessedOrders
         if (hasUnprocessedOrders) {
             binding.processOrderButton.text = getString(R.string.orders_process_order)
-        } else if (state.downloadedCount > 0) {
+        } else if (state.totalOrders > 0) {
             binding.processOrderButton.text = "All Orders Processed"
         } else {
             binding.processOrderButton.text = getString(R.string.orders_process_order)
