@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lacomprago.data.api.ApiClient
 import com.lacomprago.data.api.ApiException
-import com.lacomprago.data.api.model.OrderDetailsResponse
 import com.lacomprago.data.api.model.OrderPreparedLinesResponse
 import com.lacomprago.data.api.model.OrderResult
 import com.lacomprago.model.CachedOrderList
@@ -272,78 +271,6 @@ class OrderProcessingViewModel(
         )
     }
 
-    /**
-     * Update products from an order.
-     * For each item in the order, increment the product frequency
-     * and update the last purchase date.
-     *
-     * @param orderDetails The order details with product items
-     * @param orderResult The order result with metadata (dates, etc.)
-     * @return The number of products updated
-     */
-    private suspend fun updateProductsFromOrder(
-        orderDetails: OrderDetailsResponse,
-        orderResult: OrderResult
-    ): Int = withContext(Dispatchers.IO) {
-        // Load current products
-        val productList = jsonStorage.loadProductList() ?: ProductList(emptyList())
-        val productsMap = productList.products.associateBy { it.id }.toMutableMap()
-        
-        // Parse order date from OrderResult (use startDate or endDate)
-        val orderTimestamp = parseOrderDate(orderResult.startDate)
-        
-        // Get lines from order details (Mercadona order structure)
-        val items = orderDetails.lines
-        if (items.isNullOrEmpty()) {
-            Log.w(TAG, "Order ${orderResult.id} has no items")
-            return@withContext 0
-        }
-        
-        var updatedCount = 0
-        
-        // Update each product from the order
-        for (item in items) {
-            val product = item.product ?: continue
-            val productId = product.id
-            val productName = product.displayName ?: "Unknown Product"
-            val quantity = item.quantity ?: 1.0
-            val category = product.categories?.firstOrNull()?.name
-
-            val existingProduct = productsMap[productId]
-
-            val updatedProduct = if (existingProduct != null) {
-                // Update existing product
-                existingProduct.copy(
-                    frequency = existingProduct.frequency + 1,
-                    lastPurchase = maxOf(existingProduct.lastPurchase, orderTimestamp),
-                    totalQuantity = existingProduct.totalQuantity + quantity
-                )
-            } else {
-                // Create new product entry
-                Product(
-                    id = productId,
-                    name = productName,
-                    frequency = 1,
-                    lastPurchase = orderTimestamp,
-                    category = category,
-                    totalQuantity = quantity
-                )
-            }
-
-            productsMap[productId] = updatedProduct
-            updatedCount++
-        }
-        
-        // Save updated products
-        val updatedProductList = ProductList(
-            products = productsMap.values.toList(),
-            lastUpdated = System.currentTimeMillis()
-        )
-        jsonStorage.saveProductList(updatedProductList)
-        
-        updatedCount
-    }
-    
     /**
      * Mark an order as processed.
      * Adds the order ID to the processed orders list and saves it.
