@@ -1,11 +1,9 @@
 package com.lacomprago.ui
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import com.lacomprago.R
 import com.lacomprago.data.api.ApiClient
 import com.lacomprago.databinding.ActivityOrderListBinding
@@ -17,13 +15,14 @@ import com.lacomprago.viewmodel.OrderListViewModel
 /**
  * Activity for displaying order list and processing status.
  * Shows total orders, downloaded count, processed count, and product statistics.
- * 
+ * Extends BaseAuthenticatedActivity for shared logout behaviour.
+ *
  * Features three separate actions:
  * - Get List Orders: Fetch order list from API
  * - Get Orders: Download one order's details
  * - Process Order: Process one downloaded order to extract products
  */
-class OrderListActivity : AppCompatActivity() {
+class OrderListActivity : BaseAuthenticatedActivity() {
     
     private lateinit var binding: ActivityOrderListBinding
     private lateinit var viewModel: OrderListViewModel
@@ -238,17 +237,5 @@ class OrderListActivity : AppCompatActivity() {
         
         // Reload from cache to reflect the change
         viewModel.loadFromLocalCache()
-    }
-
-    /**
-     * Clear stored token and navigate back to the login screen.
-     */
-    private fun logout() {
-        tokenStorage.clearToken()
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        startActivity(intent)
-        finish()
     }
 }

@@ -3,27 +3,25 @@ package com.lacomprago.ui
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.lacomprago.R
 import com.lacomprago.databinding.ActivityProductListBinding
 import com.lacomprago.model.Product
 import com.lacomprago.model.ProductListState
 import com.lacomprago.storage.JsonStorage
-import com.lacomprago.storage.TokenStorage
 import com.lacomprago.viewmodel.ProductViewModel
 
 /**
  * Activity for displaying the product list.
  * Shows products sorted by frequency with refresh capability.
- * Provides navigation to orders and logout functionality.
+ * Provides navigation to orders and logout functionality via the toolbar menu.
+ * Extends BaseAuthenticatedActivity for shared logout behaviour.
  */
-class ProductListActivity : AppCompatActivity() {
+class ProductListActivity : BaseAuthenticatedActivity() {
     
     private lateinit var binding: ActivityProductListBinding
     private lateinit var viewModel: ProductViewModel
     private lateinit var adapter: ProductAdapter
-    private lateinit var tokenStorage: TokenStorage
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +30,6 @@ class ProductListActivity : AppCompatActivity() {
         
         // Initialize ViewModel with JsonStorage
         val jsonStorage = JsonStorage(applicationContext)
-        tokenStorage = TokenStorage(applicationContext)
         viewModel = ProductViewModel(jsonStorage)
         
         setupToolbar()
@@ -136,17 +133,5 @@ class ProductListActivity : AppCompatActivity() {
         binding.errorStateLayout.visibility = View.VISIBLE
         binding.productCountText.visibility = View.GONE
         binding.errorText.text = message
-    }
-
-    /**
-     * Clear stored token and navigate back to the login screen.
-     */
-    private fun logout() {
-        tokenStorage.clearToken()
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        startActivity(intent)
-        finish()
     }
 }
