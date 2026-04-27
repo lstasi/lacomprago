@@ -15,7 +15,7 @@ import com.lacomprago.viewmodel.ProductViewModel
  * Activity for displaying the product list.
  * Shows products sorted by frequency with refresh capability.
  * Provides navigation to orders and logout functionality via the toolbar menu.
- * Extends BaseAuthenticatedActivity for shared logout behaviour.
+ * Extends BaseAuthenticatedActivity for shared logout behavior.
  */
 class ProductListActivity : BaseAuthenticatedActivity() {
     

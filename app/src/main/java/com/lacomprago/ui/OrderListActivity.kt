@@ -14,7 +14,7 @@ import com.lacomprago.viewmodel.OrderListViewModel
 /**
  * Activity for displaying order list and processing status.
  * Shows total orders, downloaded count, processed count, and product statistics.
- * Extends BaseAuthenticatedActivity for shared logout behaviour.
+ * Extends BaseAuthenticatedActivity for shared logout behavior.
  *
  * Features three separate actions:
  * - Get List Orders: Fetch order list from API
