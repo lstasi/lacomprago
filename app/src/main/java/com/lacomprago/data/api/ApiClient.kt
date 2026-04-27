@@ -5,6 +5,8 @@ import com.google.gson.Gson
 import com.lacomprago.BuildConfig
 import com.lacomprago.data.api.model.CartLineRequest
 import com.lacomprago.data.api.model.CustomerResponse
+import com.lacomprago.data.api.model.LoginRequest
+import com.lacomprago.data.api.model.LoginResponse
 import com.lacomprago.data.api.model.MercadonaCartRequest
 import com.lacomprago.data.api.model.MercadonaCartResponse
 import com.lacomprago.data.api.model.OrderDetailsResponse
@@ -39,6 +41,37 @@ class ApiClient(
     private val gson: Gson = Gson(),
     private val rateLimiter: RateLimiter = RateLimiter()
 ) {
+
+    /**
+     * Log in with email and password to obtain an access token.
+     *
+     * Endpoint: POST /api/auth/tokens/
+     *
+     * @param username The user's email address
+     * @param password The user's password
+     * @return LoginResponse with access token and customer ID
+     * @throws ApiException if login fails (e.g. invalid credentials)
+     */
+    suspend fun login(username: String, password: String): LoginResponse = withContext(Dispatchers.IO) {
+        rateLimiter.acquire()
+
+        val loginRequest = LoginRequest(username, password)
+        val json = gson.toJson(loginRequest)
+        val body = json.toRequestBody(MEDIA_TYPE_JSON)
+
+        val request = Request.Builder()
+            .url("${ApiConfig.BASE_URL}auth/tokens/")
+            .post(body)
+            .build()
+
+        // Intentionally do not log the request body to avoid leaking credentials
+        logRequest(request)
+
+        httpClient.newCall(request).execute().use { response ->
+            logResponse(response)
+            handleResponse(response, "Login failed")
+        }
+    }
 
     /**
      * Get customer information and validate token.

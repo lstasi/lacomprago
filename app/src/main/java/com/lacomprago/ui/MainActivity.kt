@@ -45,24 +45,27 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun setupListeners() {
-        // Submit button click
+        // Login button click
         binding.submitButton.setOnClickListener {
-            val token = binding.tokenEditText.text.toString()
-            viewModel.submitToken(token)
+            val email = binding.emailEditText.text.toString()
+            val password = binding.passwordEditText.text.toString()
+            viewModel.login(email, password)
         }
         
-        // Clear token button click
+        // Clear session button click
         binding.clearTokenButton.setOnClickListener {
             viewModel.clearToken()
-            binding.tokenEditText.text?.clear()
-            binding.tokenInputLayout.error = null
+            binding.emailEditText.text?.clear()
+            binding.passwordEditText.text?.clear()
+            binding.emailInputLayout.error = null
         }
         
-        // Handle keyboard submit action
-        binding.tokenEditText.setOnEditorActionListener { _, actionId, _ ->
+        // Handle keyboard submit action on password field
+        binding.passwordEditText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                val token = binding.tokenEditText.text.toString()
-                viewModel.submitToken(token)
+                val email = binding.emailEditText.text.toString()
+                val password = binding.passwordEditText.text.toString()
+                viewModel.login(email, password)
                 true
             } else {
                 false
@@ -83,34 +86,37 @@ class MainActivity : AppCompatActivity() {
     
     private fun showNoTokenState() {
         binding.apply {
-            tokenInputLayout.isEnabled = true
+            emailInputLayout.isEnabled = true
+            passwordInputLayout.isEnabled = true
             submitButton.isEnabled = true
             submitButton.visibility = View.VISIBLE
             clearTokenButton.visibility = View.GONE
             progressIndicator.visibility = View.GONE
             statusText.visibility = View.GONE
-            tokenInputLayout.error = null
+            emailInputLayout.error = null
         }
     }
     
     private fun showValidatingState() {
         binding.apply {
-            tokenInputLayout.isEnabled = false
+            emailInputLayout.isEnabled = false
+            passwordInputLayout.isEnabled = false
             submitButton.isEnabled = false
             progressIndicator.visibility = View.VISIBLE
             statusText.visibility = View.VISIBLE
-            statusText.text = getString(R.string.token_validating)
+            statusText.text = getString(R.string.login_authenticating)
             statusText.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_secondary))
         }
     }
     
     private fun showTokenInvalidState(message: String) {
         binding.apply {
-            tokenInputLayout.isEnabled = true
+            emailInputLayout.isEnabled = true
+            passwordInputLayout.isEnabled = true
             submitButton.isEnabled = true
             progressIndicator.visibility = View.GONE
             statusText.visibility = View.GONE
-            tokenInputLayout.error = message
+            emailInputLayout.error = message
         }
     }
     

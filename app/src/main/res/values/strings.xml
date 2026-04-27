@@ -2,6 +2,14 @@
 <resources>
     <string name="app_name">LaCompraGo</string>
     
+    <!-- Login Screen -->
+    <string name="login_instruction">Log in to your Mercadona account</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="login_button">Login</string>
+    <string name="login_authenticating">Logging in…</string>
+    <string name="login_clear_session">Clear Session</string>
+
     <!-- Token Screen -->
     <string name="token_instruction">Enter your API token to get started</string>
     <string name="token_input_hint">API Token</string>
