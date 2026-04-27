@@ -9,7 +9,6 @@ import com.lacomprago.data.api.ApiClient
 import com.lacomprago.databinding.ActivityOrderListBinding
 import com.lacomprago.model.OrderListState
 import com.lacomprago.storage.JsonStorage
-import com.lacomprago.storage.TokenStorage
 import com.lacomprago.viewmodel.OrderListViewModel
 
 /**
@@ -26,7 +25,6 @@ class OrderListActivity : BaseAuthenticatedActivity() {
     
     private lateinit var binding: ActivityOrderListBinding
     private lateinit var viewModel: OrderListViewModel
-    private lateinit var tokenStorage: TokenStorage
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +32,6 @@ class OrderListActivity : BaseAuthenticatedActivity() {
         setContentView(binding.root)
         
         // Initialize ViewModel
-        tokenStorage = TokenStorage(applicationContext)
         val apiClient = ApiClient.create(tokenStorage)
         val jsonStorage = JsonStorage(applicationContext)
         viewModel = OrderListViewModel(apiClient, jsonStorage, tokenStorage)
