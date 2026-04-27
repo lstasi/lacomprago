@@ -4,25 +4,24 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import com.lacomprago.R
 import com.lacomprago.data.api.ApiClient
 import com.lacomprago.databinding.ActivityOrderListBinding
 import com.lacomprago.model.OrderListState
 import com.lacomprago.storage.JsonStorage
-import com.lacomprago.storage.TokenStorage
 import com.lacomprago.viewmodel.OrderListViewModel
 
 /**
  * Activity for displaying order list and processing status.
  * Shows total orders, downloaded count, processed count, and product statistics.
- * 
+ * Extends BaseAuthenticatedActivity for shared logout behavior.
+ *
  * Features three separate actions:
  * - Get List Orders: Fetch order list from API
  * - Get Orders: Download one order's details
  * - Process Order: Process one downloaded order to extract products
  */
-class OrderListActivity : AppCompatActivity() {
+class OrderListActivity : BaseAuthenticatedActivity() {
     
     private lateinit var binding: ActivityOrderListBinding
     private lateinit var viewModel: OrderListViewModel
@@ -33,7 +32,6 @@ class OrderListActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         // Initialize ViewModel
-        val tokenStorage = TokenStorage(applicationContext)
         val apiClient = ApiClient.create(tokenStorage)
         val jsonStorage = JsonStorage(applicationContext)
         viewModel = OrderListViewModel(apiClient, jsonStorage, tokenStorage)
@@ -46,6 +44,16 @@ class OrderListActivity : AppCompatActivity() {
     private fun setupToolbar() {
         binding.toolbar.setNavigationOnClickListener {
             finish()
+        }
+        binding.toolbar.inflateMenu(R.menu.menu_order_list)
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_logout -> {
+                    logout()
+                    true
+                }
+                else -> false
+            }
         }
     }
     

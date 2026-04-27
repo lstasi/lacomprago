@@ -83,6 +83,9 @@
     <string name="retry">Retry</string>
     <string name="product_count">%1$d products</string>
     
+    <!-- Auth -->
+    <string name="action_logout">Logout</string>
+
     <!-- Debug Mode -->
     <string name="debug_title">API Debug Mode</string>
     <string name="debug_token_management">Token Management</string>

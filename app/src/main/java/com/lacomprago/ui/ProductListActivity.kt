@@ -1,8 +1,8 @@
 package com.lacomprago.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.lacomprago.R
 import com.lacomprago.databinding.ActivityProductListBinding
@@ -14,8 +14,10 @@ import com.lacomprago.viewmodel.ProductViewModel
 /**
  * Activity for displaying the product list.
  * Shows products sorted by frequency with refresh capability.
+ * Provides navigation to orders and logout functionality via the toolbar menu.
+ * Extends BaseAuthenticatedActivity for shared logout behavior.
  */
-class ProductListActivity : AppCompatActivity() {
+class ProductListActivity : BaseAuthenticatedActivity() {
     
     private lateinit var binding: ActivityProductListBinding
     private lateinit var viewModel: ProductViewModel
@@ -30,6 +32,7 @@ class ProductListActivity : AppCompatActivity() {
         val jsonStorage = JsonStorage(applicationContext)
         viewModel = ProductViewModel(jsonStorage)
         
+        setupToolbar()
         setupRecyclerView()
         setupListeners()
         observeProductListState()
@@ -42,6 +45,23 @@ class ProductListActivity : AppCompatActivity() {
         // This ensures the list is updated if products were added/modified
         // in other activities (e.g., OrderListActivity processing orders)
         viewModel.loadProducts()
+    }
+    
+    private fun setupToolbar() {
+        binding.toolbar.inflateMenu(R.menu.menu_product_list)
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_orders -> {
+                    startActivity(Intent(this, OrderListActivity::class.java))
+                    true
+                }
+                R.id.action_logout -> {
+                    logout()
+                    true
+                }
+                else -> false
+            }
+        }
     }
     
     private fun setupRecyclerView() {
