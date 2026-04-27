@@ -1,5 +1,6 @@
 package com.lacomprago.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -9,17 +10,20 @@ import com.lacomprago.databinding.ActivityProductListBinding
 import com.lacomprago.model.Product
 import com.lacomprago.model.ProductListState
 import com.lacomprago.storage.JsonStorage
+import com.lacomprago.storage.TokenStorage
 import com.lacomprago.viewmodel.ProductViewModel
 
 /**
  * Activity for displaying the product list.
  * Shows products sorted by frequency with refresh capability.
+ * Provides navigation to orders and logout functionality.
  */
 class ProductListActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityProductListBinding
     private lateinit var viewModel: ProductViewModel
     private lateinit var adapter: ProductAdapter
+    private lateinit var tokenStorage: TokenStorage
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,8 +32,10 @@ class ProductListActivity : AppCompatActivity() {
         
         // Initialize ViewModel with JsonStorage
         val jsonStorage = JsonStorage(applicationContext)
+        tokenStorage = TokenStorage(applicationContext)
         viewModel = ProductViewModel(jsonStorage)
         
+        setupToolbar()
         setupRecyclerView()
         setupListeners()
         observeProductListState()
@@ -42,6 +48,23 @@ class ProductListActivity : AppCompatActivity() {
         // This ensures the list is updated if products were added/modified
         // in other activities (e.g., OrderListActivity processing orders)
         viewModel.loadProducts()
+    }
+    
+    private fun setupToolbar() {
+        binding.toolbar.inflateMenu(R.menu.menu_product_list)
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_orders -> {
+                    startActivity(Intent(this, OrderListActivity::class.java))
+                    true
+                }
+                R.id.action_logout -> {
+                    logout()
+                    true
+                }
+                else -> false
+            }
+        }
     }
     
     private fun setupRecyclerView() {
@@ -113,5 +136,17 @@ class ProductListActivity : AppCompatActivity() {
         binding.errorStateLayout.visibility = View.VISIBLE
         binding.productCountText.visibility = View.GONE
         binding.errorText.text = message
+    }
+
+    /**
+     * Clear stored token and navigate back to the login screen.
+     */
+    private fun logout() {
+        tokenStorage.clearToken()
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish()
     }
 }

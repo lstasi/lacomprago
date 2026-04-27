@@ -16,8 +16,10 @@ import com.lacomprago.ui.debug.DebugActivity
 import com.lacomprago.viewmodel.AuthViewModel
 
 /**
- * Main Activity - Entry point of the application
- * Handles token input and validation
+ * Main Activity - Entry point of the application.
+ * Handles token input and validation. Automatically navigates to
+ * ProductListActivity on successful login, and finishes itself so
+ * the login screen is not in the back stack while the user is authenticated.
  */
 class MainActivity : AppCompatActivity() {
     
@@ -66,16 +68,6 @@ class MainActivity : AppCompatActivity() {
                 false
             }
         }
-        
-        // Continue to products button click
-        binding.continueButton.setOnClickListener {
-            navigateToProductList()
-        }
-        
-        // View orders button click
-        binding.viewOrdersButton.setOnClickListener {
-            navigateToOrderList()
-        }
     }
     
     private fun observeAuthState() {
@@ -83,7 +75,7 @@ class MainActivity : AppCompatActivity() {
             when (state) {
                 is AuthState.NoToken -> showNoTokenState()
                 is AuthState.ValidatingToken -> showValidatingState()
-                is AuthState.TokenValid -> showTokenValidState()
+                is AuthState.TokenValid -> navigateToProductList()
                 is AuthState.TokenInvalid -> showTokenInvalidState(state.message)
             }
         }
@@ -95,7 +87,6 @@ class MainActivity : AppCompatActivity() {
             submitButton.isEnabled = true
             submitButton.visibility = View.VISIBLE
             clearTokenButton.visibility = View.GONE
-            continueButton.visibility = View.GONE
             progressIndicator.visibility = View.GONE
             statusText.visibility = View.GONE
             tokenInputLayout.error = null
@@ -113,21 +104,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    private fun showTokenValidState() {
-        binding.apply {
-            tokenInputLayout.isEnabled = false
-            submitButton.visibility = View.GONE
-            clearTokenButton.visibility = View.VISIBLE
-            continueButton.visibility = View.VISIBLE
-            viewOrdersButton.visibility = View.VISIBLE
-            progressIndicator.visibility = View.GONE
-            statusText.visibility = View.VISIBLE
-            statusText.text = getString(R.string.token_stored)
-            statusText.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.success_green))
-            tokenInputLayout.error = null
-        }
-    }
-    
     private fun showTokenInvalidState(message: String) {
         binding.apply {
             tokenInputLayout.isEnabled = true
@@ -138,14 +114,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
+    /**
+     * Navigate to ProductListActivity after successful login.
+     * Clears the activity back stack so the user cannot navigate back
+     * to the login screen while authenticated.
+     */
     private fun navigateToProductList() {
-        val intent = Intent(this, ProductListActivity::class.java)
+        val intent = Intent(this, ProductListActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
         startActivity(intent)
-    }
-    
-    private fun navigateToOrderList() {
-        val intent = Intent(this, OrderListActivity::class.java)
-        startActivity(intent)
+        finish()
     }
 
     private fun setupDebugAccess() {

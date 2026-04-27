@@ -1,5 +1,6 @@
 package com.lacomprago.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -26,6 +27,7 @@ class OrderListActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityOrderListBinding
     private lateinit var viewModel: OrderListViewModel
+    private lateinit var tokenStorage: TokenStorage
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +35,7 @@ class OrderListActivity : AppCompatActivity() {
         setContentView(binding.root)
         
         // Initialize ViewModel
-        val tokenStorage = TokenStorage(applicationContext)
+        tokenStorage = TokenStorage(applicationContext)
         val apiClient = ApiClient.create(tokenStorage)
         val jsonStorage = JsonStorage(applicationContext)
         viewModel = OrderListViewModel(apiClient, jsonStorage, tokenStorage)
@@ -46,6 +48,16 @@ class OrderListActivity : AppCompatActivity() {
     private fun setupToolbar() {
         binding.toolbar.setNavigationOnClickListener {
             finish()
+        }
+        binding.toolbar.inflateMenu(R.menu.menu_order_list)
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_logout -> {
+                    logout()
+                    true
+                }
+                else -> false
+            }
         }
     }
     
@@ -226,5 +238,17 @@ class OrderListActivity : AppCompatActivity() {
         
         // Reload from cache to reflect the change
         viewModel.loadFromLocalCache()
+    }
+
+    /**
+     * Clear stored token and navigate back to the login screen.
+     */
+    private fun logout() {
+        tokenStorage.clearToken()
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        finish()
     }
 }
