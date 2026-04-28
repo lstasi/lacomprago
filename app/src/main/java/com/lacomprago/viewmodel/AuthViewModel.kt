@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.util.Patterns
 import com.lacomprago.data.api.ApiClient
 import com.lacomprago.data.api.ApiException
 import com.lacomprago.data.api.model.CustomerResponse
@@ -48,7 +49,7 @@ class AuthViewModel(
             val customerId = resolveCustomerId(storedToken, preferStored = true)
             if (customerId.isNullOrBlank()) {
                 tokenStorage.clearToken()
-                _authState.value = AuthState.TokenInvalid("Customer ID missing. Please re-enter your token.")
+                _authState.value = AuthState.TokenInvalid("Session expired. Please log in again.")
                 return@launch
             }
 
@@ -62,6 +63,46 @@ class AuthViewModel(
         }
     }
     
+    /**
+     * Log in with email and password.
+     * Calls the login API, then stores the access token and customer ID on success.
+     *
+     * @param email The user's email address
+     * @param password The user's password
+     */
+    fun login(email: String, password: String) {
+        val trimmedEmail = email.trim()
+        val trimmedPassword = password.trim()
+
+        if (trimmedEmail.isBlank()) {
+            _authState.value = AuthState.TokenInvalid("Email cannot be empty")
+            return
+        }
+
+        if (!Patterns.EMAIL_ADDRESS.matcher(trimmedEmail).matches()) {
+            _authState.value = AuthState.TokenInvalid("Please enter a valid email address")
+            return
+        }
+
+        if (trimmedPassword.isBlank()) {
+            _authState.value = AuthState.TokenInvalid("Password cannot be empty")
+            return
+        }
+
+        _authState.value = AuthState.ValidatingToken
+
+        viewModelScope.launch {
+            try {
+                val response = apiClient.login(trimmedEmail, trimmedPassword)
+                tokenStorage.saveToken(response.accessToken)
+                tokenStorage.saveCustomerId(response.customerId)
+                _authState.value = AuthState.TokenValid(response.accessToken)
+            } catch (e: Exception) {
+                handleLoginFailure(e)
+            }
+        }
+    }
+
     /**
      * Submit a token for validation and storage.
      * Extracts customer UUID from the JWT, validates the token via API,
@@ -139,6 +180,17 @@ class AuthViewModel(
             else -> fallbackCustomerId
         }
         tokenStorage.saveCustomerId(resolvedCustomerId)
+    }
+
+    private fun handleLoginFailure(e: Exception) {
+        val message = when (e) {
+            is ApiException -> when (e.httpCode) {
+                401, 403 -> "Invalid email or password"
+                else -> e.message ?: "Login failed"
+            }
+            else -> e.message?.let { "Login failed: $it" } ?: "Login failed"
+        }
+        _authState.value = AuthState.TokenInvalid(message)
     }
 
     private fun handleValidationFailure(e: Exception) {
