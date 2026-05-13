@@ -260,37 +260,13 @@ class OrderListViewModel(
                     val productList = jsonStorage.loadProductList() ?: ProductList(emptyList())
                     val productsMap = productList.products.associateBy { it.id }.toMutableMap()
 
-                    fun upsertProduct(
-                        productId: String,
-                        productName: String,
-                        quantity: Double,
-                        category: String?
-                    ) {
-                        val existingProduct = productsMap[productId]
-                        val updatedProduct = if (existingProduct != null) {
-                            existingProduct.copy(
-                                frequency = existingProduct.frequency + 1,
-                                lastPurchase = maxOf(existingProduct.lastPurchase, orderTimestamp),
-                                totalQuantity = existingProduct.totalQuantity + quantity
-                            )
-                        } else {
-                            Product(
-                                id = productId,
-                                name = productName,
-                                frequency = 1,
-                                lastPurchase = orderTimestamp,
-                                category = category,
-                                totalQuantity = quantity
-                            )
-                        }
-                        productsMap[productId] = updatedProduct
-                    }
-
                     val items = orderDetails.lines
                     if (!items.isNullOrEmpty()) {
                         for (item in items) {
                             val product = item.product ?: continue
                             upsertProduct(
+                                productsMap = productsMap,
+                                orderTimestamp = orderTimestamp,
                                 productId = product.id,
                                 productName = product.displayName ?: "Unknown Product",
                                 quantity = item.quantity ?: 1.0,
@@ -317,6 +293,8 @@ class OrderListViewModel(
                         for (item in preparedLines.results) {
                             val product = item.product ?: continue
                             upsertProduct(
+                                productsMap = productsMap,
+                                orderTimestamp = orderTimestamp,
                                 productId = product.id,
                                 productName = product.displayName ?: "Unknown Product",
                                 quantity = item.preparedQuantity ?: item.orderedQuantity ?: 1.0,
@@ -434,9 +412,38 @@ class OrderListViewModel(
             dateString
         }
     }
+
+    private fun upsertProduct(
+        productsMap: MutableMap<String, Product>,
+        orderTimestamp: Long,
+        productId: String,
+        productName: String,
+        quantity: Double,
+        category: String?
+    ) {
+        val existingProduct = productsMap[productId]
+        val updatedProduct = if (existingProduct != null) {
+            existingProduct.copy(
+                frequency = existingProduct.frequency + 1,
+                lastPurchase = maxOf(existingProduct.lastPurchase, orderTimestamp),
+                totalQuantity = existingProduct.totalQuantity + quantity
+            )
+        } else {
+            Product(
+                id = productId,
+                name = productName,
+                frequency = 1,
+                lastPurchase = orderTimestamp,
+                category = category,
+                totalQuantity = quantity
+            )
+        }
+        productsMap[productId] = updatedProduct
+    }
     
     companion object {
         private const val TAG = "OrderListViewModel"
+        // Fallback warehouse used only when order metadata does not provide one.
         private const val DEFAULT_WAREHOUSE_CODE = "bcn1"
     }
 }
