@@ -259,36 +259,69 @@ class OrderListViewModel(
                     Log.d(TAG, "Processing order $orderIdToProcess")
                     val productList = jsonStorage.loadProductList() ?: ProductList(emptyList())
                     val productsMap = productList.products.associateBy { it.id }.toMutableMap()
-                    
+
+                    fun upsertProduct(
+                        productId: String,
+                        productName: String,
+                        quantity: Double,
+                        category: String?
+                    ) {
+                        val existingProduct = productsMap[productId]
+                        val updatedProduct = if (existingProduct != null) {
+                            existingProduct.copy(
+                                frequency = existingProduct.frequency + 1,
+                                lastPurchase = maxOf(existingProduct.lastPurchase, orderTimestamp),
+                                totalQuantity = existingProduct.totalQuantity + quantity
+                            )
+                        } else {
+                            Product(
+                                id = productId,
+                                name = productName,
+                                frequency = 1,
+                                lastPurchase = orderTimestamp,
+                                category = category,
+                                totalQuantity = quantity
+                            )
+                        }
+                        productsMap[productId] = updatedProduct
+                    }
+
                     val items = orderDetails.lines
                     if (!items.isNullOrEmpty()) {
                         for (item in items) {
                             val product = item.product ?: continue
-                            val productId = product.id
-                            val productName = product.displayName ?: "Unknown Product"
-                            val quantity = item.quantity ?: 1.0
-                            val category = product.categories?.firstOrNull()?.name
+                            upsertProduct(
+                                productId = product.id,
+                                productName = product.displayName ?: "Unknown Product",
+                                quantity = item.quantity ?: 1.0,
+                                category = product.categories?.firstOrNull()?.name
+                            )
+                        }
+                    } else {
+                        val customerId = tokenStorage.getCustomerId()
+                            ?: throw ApiException("Customer ID not configured. Please set up your account.", 0)
+                        val warehouseCode = orderResult?.warehouseCode
+                            ?: orderDetails.warehouseCode
+                            ?: DEFAULT_WAREHOUSE_CODE
 
-                            val existingProduct = productsMap[productId]
+                        Log.d(
+                            TAG,
+                            "Order $orderIdToProcess has no lines in details, fetching prepared lines with warehouse $warehouseCode"
+                        )
+                        val preparedLines = apiClient.getOrderPreparedLines(
+                            customerId = customerId,
+                            orderId = orderIdToProcess,
+                            warehouseCode = warehouseCode
+                        )
 
-                            val updatedProduct = if (existingProduct != null) {
-                                existingProduct.copy(
-                                    frequency = existingProduct.frequency + 1,
-                                    lastPurchase = maxOf(existingProduct.lastPurchase, orderTimestamp),
-                                    totalQuantity = existingProduct.totalQuantity + quantity
-                                )
-                            } else {
-                                Product(
-                                    id = productId,
-                                    name = productName,
-                                    frequency = 1,
-                                    lastPurchase = orderTimestamp,
-                                    category = category,
-                                    totalQuantity = quantity
-                                )
-                            }
-
-                            productsMap[productId] = updatedProduct
+                        for (item in preparedLines.results) {
+                            val product = item.product ?: continue
+                            upsertProduct(
+                                productId = product.id,
+                                productName = product.displayName ?: "Unknown Product",
+                                quantity = item.preparedQuantity ?: item.orderedQuantity ?: 1.0,
+                                category = product.categories?.firstOrNull()?.name
+                            )
                         }
                     }
                     
@@ -404,5 +437,6 @@ class OrderListViewModel(
     
     companion object {
         private const val TAG = "OrderListViewModel"
+        private const val DEFAULT_WAREHOUSE_CODE = "bcn1"
     }
 }
