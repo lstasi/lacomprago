@@ -36,7 +36,6 @@ class ProductListActivity : BaseAuthenticatedActivity() {
         setupRecyclerView()
         setupListeners()
         observeProductListState()
-        observeProductCount()
     }
     
     override fun onResume() {
@@ -90,17 +89,6 @@ class ProductListActivity : BaseAuthenticatedActivity() {
         }
     }
     
-    private fun observeProductCount() {
-        viewModel.productCount.observe(this) { count ->
-            if (count > 0) {
-                binding.productCountText.text = getString(R.string.product_count, count)
-                binding.productCountText.visibility = View.VISIBLE
-            } else {
-                binding.productCountText.visibility = View.GONE
-            }
-        }
-    }
-    
     private fun showLoading() {
         binding.loadingIndicator.visibility = View.VISIBLE
         binding.productRecyclerView.visibility = View.GONE
@@ -114,7 +102,10 @@ class ProductListActivity : BaseAuthenticatedActivity() {
         binding.productRecyclerView.visibility = View.VISIBLE
         binding.emptyStateLayout.visibility = View.GONE
         binding.errorStateLayout.visibility = View.GONE
-        
+
+        binding.productCountText.text = getString(R.string.product_count, products.size)
+        binding.productCountText.visibility = View.VISIBLE
+
         adapter.submitList(products)
     }
     
